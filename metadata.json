@@ -1,0 +1,5 @@
+{
+  "name": "Supplier Management Portal",
+  "description": "A comprehensive web application for registering and managing supplier information, including document uploads and an admin approval workflow.",
+  "requestFramePermissions": []
+}
