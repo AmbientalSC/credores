@@ -13,10 +13,10 @@ body.light .bg-white {
   background-color: #fff !important;
 }
 body.light .dark\:bg-gray-900 {
-  background-color: hwb(86 92% 5%) !important;
+  background-color: #e2dfdfaf !important;
 }
 body.light .dark\:bg-gray-800 {
-  background-color: #d9dbdf !important;
+  background-color: #bebebe81 !important;
 }
 body.light .dark\:text-gray-400 {
   color: #333 !important;
