@@ -110,7 +110,15 @@ const PreRegistrationPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center p-4">
+    <div
+      className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center p-4"
+      style={{
+        backgroundImage: "url('/credores/meioambiental.jpeg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat"
+      }}
+    >
       <div className="absolute top-4 right-4 flex items-center gap-2">
         <Link to="/admin/login"
           className="font-medium px-4 py-2 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-gray-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
