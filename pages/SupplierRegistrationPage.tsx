@@ -125,6 +125,13 @@ const SupplierRegistrationPage: React.FC = () => {
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg">
         <div className="p-8">
+            <div className="text-center mb-6">
+                <img 
+                  src="/credores/ambiental.svg" 
+                  alt="Logo Ambiental"
+                  className="lucide lucide-building mx-auto h-12 w-12 text-indigo-600 dark:text-indigo-400 mb-4"
+                />
+            </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Formulário de Cadastro</h1>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Preencha todos os campos para finalizar seu cadastro.</p>
         </div>

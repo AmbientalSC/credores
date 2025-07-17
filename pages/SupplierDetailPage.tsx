@@ -101,7 +101,7 @@ const SupplierDetailPage: React.FC = () => {
                         <span className="ml-2 flex-1 w-0 truncate">{doc.docName}</span>
                       </div>
                       <div className="ml-4 flex-shrink-0">
-                        <a href={doc.url} download={doc.docName} className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center">
+                        <a href={doc.url} download={doc.docName} target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center">
                           <Download className="h-4 w-4 mr-1" />
                           Baixar
                         </a>

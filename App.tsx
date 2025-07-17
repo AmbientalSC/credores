@@ -36,7 +36,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <Header />
     <main className="p-4 sm:p-6 lg:p-8">{children}</main>
   </div>
-);
+); 
 
 const AppRoutes: React.FC = () => {
   const { user } = useAuth();
