@@ -169,7 +169,8 @@ function mapSupplierToSiengeCreditor(
  * - siengeCreditorId: ID do credor criado no Sienge
  * - message: mensagem de sucesso ou erro
  */
-export const createSiengeCreditor = onCall(async (request) => {
+// Bind SIENGE secrets to the callable so the runtime can access them
+export const createSiengeCreditor = onCall({ secrets: [siengeUsername, siengePassword] } as any, async (request) => {
     // 1. Verificar autenticação
     if (!request.auth) {
         throw new HttpsError("unauthenticated", "Usuário não autenticado");
@@ -325,22 +326,27 @@ export const createSiengeCreditor = onCall(async (request) => {
             response: error.response?.data,
         });
 
-        // Salvar erro no Firestore para análise
+        // Salvar erro no Firestore para análise (protege contra undefined em error.response)
         if (supplierId) {
-            await admin
-                .firestore()
-                .collection("suppliers")
-                .doc(supplierId)
-                .update({
+            try {
+                const siengeIntegrationError: any = {
+                    message: error.message,
+                    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                };
+
+                if (error.response && error.response.data !== undefined) {
+                    siengeIntegrationError.response = error.response.data;
+                }
+
+                await admin.firestore().collection("suppliers").doc(supplierId).update({
                     siengeIntegrationStatus: "error",
-                    siengeIntegrationError: {
-                        message: error.message,
-                        response: error.response?.data,
-                        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-                    },
-                }).catch(() => {
-                    // Ignore errors when updating error status
+                    siengeIntegrationError,
                 });
+            } catch (updateErr: unknown) {
+                // Ignore errors when updating error status to avoid masking original error
+                const msg = updateErr instanceof Error ? updateErr.message : String(updateErr);
+                logger.warn('Falha ao registrar erro no Firestore:', { updateErr: msg });
+            }
         }
 
         // Tratamento de erros específicos da API Sienge

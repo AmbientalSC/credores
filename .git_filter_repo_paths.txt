@@ -1,0 +1,2 @@
+functions/.env.example
+functions/.env.credores-1ea6f
