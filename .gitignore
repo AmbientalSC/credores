@@ -12,6 +12,18 @@ dist
 dist-ssr
 *.local
 
+# Sensitive config
+/.env*
+/functions/.env*
+/functions/*.env*
+/functions/.env.credores-*
+service-account.json
+test.json
+*/service-account.json
+*.service-account.json
+*.key.json
+*.secret
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
