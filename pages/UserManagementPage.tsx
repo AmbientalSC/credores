@@ -189,13 +189,15 @@ const UserManagementPage: React.FC = () => {
                                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
-                            <button
-                                onClick={() => setShowCreateModal(true)}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                            >
-                                <UserPlus className="h-4 w-4" />
-                                Novo Usuário
-                            </button>
+                            {user?.role === UserRole.Admin && (
+                                <button
+                                    onClick={() => setShowCreateModal(true)}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                                >
+                                    <UserPlus className="h-4 w-4" />
+                                    Novo Usuário
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -264,29 +266,33 @@ const UserManagementPage: React.FC = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex items-center justify-end space-x-2">
-                                            <button
-                                                onClick={() => {
-                                                    setUserToAction(user);
-                                                    setShowStatusModal(true);
-                                                }}
-                                                className={`p-2 rounded-lg transition-colors ${user.status === UserStatus.Active
-                                                    ? 'text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20'
-                                                    : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
-                                                    }`}
-                                                title={user.status === UserStatus.Active ? 'Desativar usuário' : 'Ativar usuário'}
-                                            >
-                                                {user.status === UserStatus.Active ? <Ban className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setUserToAction(user);
-                                                    setShowDeleteModal(true);
-                                                }}
-                                                className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                title="Excluir usuário"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
+                                            {user?.role === UserRole.Admin && (
+                                                <>
+                                                    <button
+                                                        onClick={() => {
+                                                            setUserToAction(user);
+                                                            setShowStatusModal(true);
+                                                        }}
+                                                        className={`p-2 rounded-lg transition-colors ${user.status === UserStatus.Active
+                                                            ? 'text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20'
+                                                            : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
+                                                            }`}
+                                                        title={user.status === UserStatus.Active ? 'Desativar usuário' : 'Ativar usuário'}
+                                                    >
+                                                        {user.status === UserStatus.Active ? <Ban className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setUserToAction(user);
+                                                            setShowDeleteModal(true);
+                                                        }}
+                                                        className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                        title="Excluir usuário"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>

@@ -111,12 +111,20 @@ class FirebaseService {
   async login(email: string, pass: string): Promise<AdminUser> {
     const userCredential = await signInWithEmailAndPassword(auth, email, pass);
     if (userCredential.user) {
-      // Permitir qualquer usuário autenticado
+      // Determine role by checking admins collection (best-effort)
+      let role = 'user' as any;
+      try {
+        const admin = await this.checkIfAdmin(userCredential.user);
+        if (admin) role = 'admin';
+      } catch (e) {
+        // ignore errors and default to 'user'
+      }
+
       const basicUser = {
         id: userCredential.user.uid,
         email: userCredential.user.email,
         displayName: userCredential.user.displayName || '',
-        role: 'user',
+        role: role,
       };
       localStorage.setItem('admin_user', JSON.stringify(basicUser));
       return basicUser as AdminUser;
@@ -138,12 +146,20 @@ class FirebaseService {
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
         unsubscribe();
         if (user) {
-          // Permitir qualquer usuário autenticado
+          // Determine role by checking admins collection (best-effort)
+          let role = 'user' as any;
+          try {
+            const admin = await this.checkIfAdmin(user);
+            if (admin) role = 'admin';
+          } catch (e) {
+            // ignore
+          }
+
           const basicUser = {
             id: user.uid,
             email: user.email,
             displayName: user.displayName || '',
-            role: 'user',
+            role: role,
           };
           localStorage.setItem('admin_user', JSON.stringify(basicUser));
           resolve(basicUser as AdminUser);
@@ -253,6 +269,19 @@ class FirebaseService {
     if (status === SupplierStatus.Aprovado) {
       updateData.approvedAt = serverTimestamp();
       updateData.rejectionReason = null;
+      // Attempt to capture approver info from local storage (set at login)
+      try {
+        const adminJson = localStorage.getItem('admin_user');
+        if (adminJson) {
+          const admin = JSON.parse(adminJson);
+          if (admin && admin.id) {
+            updateData.approvedBy = admin.id;
+            updateData.approvedByName = admin.displayName || admin.email || null;
+          }
+        }
+      } catch (e) {
+        // ignore localStorage errors
+      }
     }
     if (status === SupplierStatus.Reprovado) {
       updateData.rejectionReason = rejectionReason || 'Motivo não especificado.';
@@ -292,30 +321,41 @@ class FirebaseService {
     password: string;
     createdBy: string;
   }): Promise<string> {
-    // Note: In a real implementation, you'd use Firebase Admin SDK to create users
-    // For now, we'll just store the user data in Firestore
-    const userRef = collection(db, 'users');
-
-    const newUser = {
-      email: userData.email,
-      name: userData.name,
-      role: userData.role,
-      status: 'active' as import('../types').UserStatus,
-      createdAt: serverTimestamp(),
-      createdBy: userData.createdBy,
-      // Note: Password should be hashed and handled server-side in production
-    };
-
-    const docRef = await addDoc(userRef, newUser);
-    return docRef.id;
+    // Create user via Cloud Function to provision in Firebase Auth and Firestore
+    // This ensures passwords and auth creation happen server-side
+    const functions = (await import('firebase/functions')).getFunctions(undefined, 'southamerica-east1');
+    const createAuthUser = (await import('firebase/functions')).httpsCallable(functions, 'createAuthUser');
+    try {
+      const result = await createAuthUser({
+        email: userData.email,
+        name: userData.name,
+        role: userData.role,
+        password: userData.password,
+        createdBy: userData.createdBy,
+      });
+      const resultData = result.data as any;
+      return resultData.userId as string;
+    } catch (error: any) {
+      console.error('Erro ao criar usuário via Cloud Function:', error);
+      throw error;
+    }
   }
 
   async updateUserStatus(userId: string, status: import('../types').UserStatus): Promise<void> {
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
-      status: status,
-      updatedAt: serverTimestamp()
-    });
+    // Update via Cloud Function to also reflect status in Firebase Auth
+    const functions = (await import('firebase/functions')).getFunctions(undefined, 'southamerica-east1');
+    const setAuthUserStatus = (await import('firebase/functions')).httpsCallable(functions, 'setAuthUserStatus');
+    try {
+      // call with userId so function can map to auth user
+      await setAuthUserStatus({ userId, status: status === 'active' ? 'active' : 'inactive' });
+    } catch (error: any) {
+      console.warn('Falha ao atualizar status via Cloud Function, fallback para atualizar apenas o Firestore', error?.message);
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        status: status,
+        updatedAt: serverTimestamp()
+      });
+    }
   }
 
   async deleteUser(userId: string): Promise<void> {

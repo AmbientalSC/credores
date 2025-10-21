@@ -8,3 +8,6 @@ typings/
 # Node.js dependency directory
 node_modules/
 *.local
+
+.env.example
+.env.credores-1ea6f

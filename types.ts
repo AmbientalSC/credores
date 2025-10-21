@@ -56,6 +56,8 @@ export interface Supplier {
   status: SupplierStatus;
   createdAt: Date;
   approvedAt: Date | null;
+  approvedBy?: string | null; // UID or identifier of the approver
+  approvedByName?: string | null; // display name of who approved
   submittedBy: string;
   rejectionReason: string | null;
   uploadedDocuments: UploadedDocument[];
@@ -152,5 +154,7 @@ export interface User {
 export interface AdminUser {
   id: string;
   email: string;
-  role: 'admin';
+  // role for the currently authenticated user (can be admin, user or viewer)
+  role: UserRole;
+  displayName?: string;
 }

@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { firebaseService } from '../services/firebaseService';
+import { useAuth } from '../hooks/useAuth';
+import { UserRole } from '../types';
 import { Supplier, SupplierStatus } from '../types';
 import { Loader, Search, Filter, Trash2 } from 'lucide-react';
 
@@ -35,6 +37,7 @@ const AdminDashboardPage: React.FC = () => {
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -170,13 +173,15 @@ const AdminDashboardPage: React.FC = () => {
                       >
                         Ver Detalhes
                       </button>
-                      <button
-                        onClick={() => handleDeleteClick(supplier)}
-                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                        title="Excluir fornecedor"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {user?.role === UserRole.Admin && (
+                        <button
+                          onClick={() => handleDeleteClick(supplier)}
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                          title="Excluir fornecedor"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

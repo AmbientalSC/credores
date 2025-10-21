@@ -9,6 +9,7 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import UserManagementPage from './pages/UserManagementPage';
 import SupplierDetailPage from './pages/SupplierDetailPage';
 import Header from './components/Header';
+import { UserRole } from './types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -27,6 +28,29 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!user) {
     return <Navigate to="/admin/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const AdminProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  if (user.role !== UserRole.Admin) {
+    // redirect non-admins to dashboard
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -62,9 +86,11 @@ const AppRoutes: React.FC = () => {
         path="/admin/users"
         element={
           <ProtectedRoute>
-            <AdminLayout>
-              <UserManagementPage />
-            </AdminLayout>
+            <AdminProtectedRoute>
+              <AdminLayout>
+                <UserManagementPage />
+              </AdminLayout>
+            </AdminProtectedRoute>
           </ProtectedRoute>
         }
       />

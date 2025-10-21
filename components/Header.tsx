@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { UserRole } from '../types';
 import { LogOut, Sun, Moon, Users, Building } from 'lucide-react';
 
 const Header: React.FC = () => {
@@ -56,16 +57,18 @@ const Header: React.FC = () => {
             <Building className="h-4 w-4 mr-2" />
             Fornecedores
           </button>
-          <button
-            onClick={() => navigate('/admin/users')}
-            className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${location.pathname === '/admin/users'
-              ? 'bg-blue-100 text-blue-800 dark:bg-indigo-900 dark:text-indigo-200'
-              : 'text-gray-800 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800'
-              }`}
-          >
-            <Users className="h-4 w-4 mr-2" />
-            Usuários
-          </button>
+          {user?.role === UserRole.Admin && (
+            <button
+              onClick={() => navigate('/admin/users')}
+              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${location.pathname === '/admin/users'
+                ? 'bg-blue-100 text-blue-800 dark:bg-indigo-900 dark:text-indigo-200'
+                : 'text-gray-800 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800'
+                }`}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Usuários
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-gray-700 dark:text-gray-300 hidden md:inline">{user?.email}</span>
