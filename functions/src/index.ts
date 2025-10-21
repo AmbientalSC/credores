@@ -10,14 +10,15 @@
 
 import { setGlobalOptions } from "firebase-functions/v2";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { defineString } from "firebase-functions/params";
+import { defineString, defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import axios from "axios";
 
 // Definir parâmetros de configuração
-const siengeUsername = defineString("[REMOVED]");
-const siengePassword = defineString("[REMOVED_SECRET]");
+// Use defineSecret para credenciais sensíveis (lidas do Secret Manager em runtime)
+const siengeUsername = defineSecret("SIENGE_USERNAME");
+const siengePassword = defineSecret("SIENGE_PASSWORD");
 const siengeBaseUrl = defineString("SIENGE_BASE_URL", {
     default: "https://api.sienge.com.br/ambientallimpeza/public/api/v1",
 });
@@ -241,7 +242,7 @@ export const createSiengeCreditor = onCall(async (request) => {
         if (!username || !password) {
             throw new HttpsError(
                 "failed-precondition",
-                "Credenciais do Sienge não configuradas. Defina [REMOVED] e [REMOVED_SECRET] ao fazer deploy."
+                "Credenciais do Sienge não configuradas. Defina SIENGE_USERNAME e SIENGE_PASSWORD ao fazer deploy."
             );
         }
 

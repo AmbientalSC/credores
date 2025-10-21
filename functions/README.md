@@ -30,17 +30,30 @@ Como configurar (resumo):
    ```
    npm install -g firebase-tools
    ```
-2. Configure as credenciais:
+2. Configure as credenciais (não inclua senhas em texto puro):
    ```
-   firebase functions:config:set erp.username="ambientallimpeza-relatoriospb"
-   firebase functions:config:set erp.password="[REMOVED_SECRET]"
+   # Recomendado: use Secret Manager e vincule os secrets ao deploy das Cloud Functions gen2
+   # Exemplo (gcloud):
+   gcloud secrets create ERP_USERNAME --replication-policy="automatic"
+   echo -n "<YOUR_ERP_USERNAME>" | gcloud secrets versions add ERP_USERNAME --data-file=-
+
+   gcloud secrets create ERP_PASSWORD --replication-policy="automatic"
+   echo -n "<YOUR_ERP_PASSWORD>" | gcloud secrets versions add ERP_PASSWORD --data-file=-
+
+   # No deploy, vincule os secrets (exemplo gen2):
+   gcloud functions deploy createSiengeCreditor \
+     --region=southamerica-east1 \
+     --gen2 \
+     --runtime=nodejs22 \
+     --trigger-http \
+     --set-secrets=SIENGE_USERNAME=projects/PROJECT_ID/secrets/ERP_USERNAME:latest,SIENGE_PASSWORD=projects/PROJECT_ID/secrets/ERP_PASSWORD:latest
    ```
 
 ### Opção C - Secret Manager (mais seguro, requer gcloud CLI):
 Se preferir usar Secret Manager, instale o Google Cloud CLI e execute:
 ```
-gcloud secrets create ERP_USERNAME --replication-policy="automatic" --data-file=<(echo "ambientallimpeza-relatoriospb")
-gcloud secrets create ERP_PASSWORD --replication-policy="automatic" --data-file=<(echo "[REMOVED_SECRET]")
+gcloud secrets create ERP_USERNAME --replication-policy="automatic" --data-file=<(echo "<YOUR_ERP_USERNAME>")
+gcloud secrets create ERP_PASSWORD --replication-policy="automatic" --data-file=<(echo "<PROTECTED: SET VIA SECRET MANAGER>")
 ```
 
 3. Deploy:
@@ -49,8 +62,8 @@ gcloud secrets create ERP_PASSWORD --replication-policy="automatic" --data-file=
 
 Alternativa simples (menos segura): 
 ```
-firebase functions:config:set erp.username="ambientallimpeza-relatoriospb"
-firebase functions:config:set erp.password="[REMOVED_SECRET]"
+firebase functions:config:set erp.username="<YOUR_ERP_USERNAME>"
+firebase functions:config:set erp.password="<PROTECTED: SET VIA SECRET MANAGER>"
 ```
 e ler via `functions.config()` (não implementado no exemplo acima).
 
