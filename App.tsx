@@ -6,6 +6,7 @@ import PreRegistrationPage from './pages/PreRegistrationPage';
 import SupplierRegistrationPage from './pages/SupplierRegistrationPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import UserManagementPage from './pages/UserManagementPage';
 import SupplierDetailPage from './pages/SupplierDetailPage';
 import Header from './components/Header';
 
@@ -32,11 +33,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 };
 
 const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="min-h-screen bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+  <div className="min-h-screen bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100">
     <Header />
     <main className="p-4 sm:p-6 lg:p-8">{children}</main>
   </div>
-); 
+);
 
 const AppRoutes: React.FC = () => {
   const { user } = useAuth();
@@ -58,6 +59,16 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <UserManagementPage />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin/supplier/:id"
         element={
           <ProtectedRoute>
@@ -67,7 +78,7 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
-       <Route path="*" element={<Navigate to={user ? "/admin/dashboard" : "/"} />} />
+      <Route path="*" element={<Navigate to={user ? "/admin/dashboard" : "/"} />} />
     </Routes>
   );
 };

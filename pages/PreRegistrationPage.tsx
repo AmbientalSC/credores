@@ -10,9 +10,32 @@ const PreRegistrationPage: React.FC = () => {
     companyName: '',
     tradeName: '',
     cnpj: '',
+    stateRegistration: '',
+    stateRegistrationType: 'C' as 'C' | 'I' | 'N', // C=Contribuinte, I=Isento, N=Não Contribuinte
+    municipalRegistration: '',
+    personType: 'J' as 'F' | 'J', // F=Física, J=Jurídica
     email: '',
     phone: '',
-    address: { street: '', city: '', state: '', zipCode: '' },
+    website: '',
+    address: {
+      street: '',
+      number: '',
+      complement: '',
+      neighborhood: '',
+      city: '',
+      state: '',
+      zipCode: ''
+    },
+    bankData: {
+      bank: '',
+      bankCode: '',
+      agency: '',
+      agencyDigit: '',
+      account: '',
+      accountDigit: '',
+      accountType: 'corrente' as 'corrente' | 'poupanca',
+      pixKey: ''
+    },
     submittedBy: '',
   });
   const [uploadedFiles, setUploadedFiles] = useState<UploadedDocument[]>([]);
@@ -22,7 +45,7 @@ const PreRegistrationPage: React.FC = () => {
   const [darkMode, setDarkMode] = useState(() => {
     return document.body.classList.contains('dark') || document.documentElement.classList.contains('dark');
   });
-  const [activeTab, setActiveTab] = useState<'empresa' | 'endereco'>('empresa');
+  const [activeTab, setActiveTab] = useState<'empresa' | 'endereco' | 'bancario'>('empresa');
 
   useEffect(() => {
     document.body.classList.remove('dark');
@@ -59,6 +82,14 @@ const PreRegistrationPage: React.FC = () => {
     setFormData(prev => ({
       ...prev,
       address: { ...prev.address, [name]: value },
+    }));
+  };
+
+  const handleBankDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      bankData: { ...prev.bankData, [name]: value },
     }));
   };
 
@@ -122,7 +153,7 @@ const PreRegistrationPage: React.FC = () => {
     >
       <div className="absolute top-4 right-4 flex items-center gap-2">
         <Link to="/admin/login"
-          className="font-medium px-4 py-2 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-gray-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+          className="font-medium px-4 py-2 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-700 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
           Acesso Admin
         </Link>
         <button
@@ -136,10 +167,10 @@ const PreRegistrationPage: React.FC = () => {
       </div>
       <div className="max-w-4xl w-full bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 space-y-6">
         <div className="text-center">
-          <img 
-            src="/credores/ambiental.svg" 
+          <img
+            src="/credores/ambiental.svg"
             alt="Logo Ambiental"
-            className="mx-auto h-40 w-auto text-indigo-600 dark:text-indigo-400"
+            className="mx-auto h-40 w-auto text-blue-700 dark:text-indigo-400"
           />
           <h2 className="mt-4 text-2xl font-extrabold text-gray-900 dark:text-gray-100 drop-shadow-sm text-center tracking-tight">
             Cadastro de Fornecedor
@@ -149,20 +180,27 @@ const PreRegistrationPage: React.FC = () => {
           </p>
         </div>
         {/* Abas de navegação */}
-        <div className="flex justify-center mb-6 gap-2">
+        <div className="flex justify-center mb-6 gap-2 flex-wrap">
           <button
             type="button"
-            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'empresa' ? 'border-indigo-600 text-indigo-600 bg-indigo-50 dark:bg-gray-700' : 'border-transparent text-gray-600 dark:text-gray-300 bg-transparent'}`}
+            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'empresa' ? 'border-blue-600 text-blue-700 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
             onClick={() => setActiveTab('empresa')}
           >
             Dados da Empresa
           </button>
           <button
             type="button"
-            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'endereco' ? 'border-indigo-600 text-indigo-600 bg-indigo-50 dark:bg-gray-700' : 'border-transparent text-gray-600 dark:text-gray-300 bg-transparent'}`}
+            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'endereco' ? 'border-blue-600 text-blue-700 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
             onClick={() => setActiveTab('endereco')}
           >
             Endereço
+          </button>
+          <button
+            type="button"
+            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'bancario' ? 'border-blue-600 text-blue-700 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
+            onClick={() => setActiveTab('bancario')}
+          >
+            Dados Bancários
           </button>
         </div>
         <form className="space-y-8" onSubmit={handleSubmit}>
@@ -172,27 +210,54 @@ const PreRegistrationPage: React.FC = () => {
               <h2 className="text-xl font-semibold leading-7 text-gray-900 dark:text-gray-100">Dados da Empresa</h2>
               <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
                 <div className="sm:col-span-3">
-                  <label htmlFor="companyName" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Razão Social</label>
+                  <label htmlFor="companyName" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Razão Social *</label>
                   <input type="text" name="companyName" id="companyName" required onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="tradeName" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Nome Fantasia</label>
                   <input type="text" name="tradeName" id="tradeName" onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
                 </div>
-                <div className="sm:col-span-3">
-                  <label htmlFor="cnpj" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">CNPJ</label>
-                  <input type="text" name="cnpj" id="cnpj" required onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                <div className="sm:col-span-2">
+                  <label htmlFor="cnpj" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">CNPJ *</label>
+                  <input type="text" name="cnpj" id="cnpj" required onChange={handleInputChange} placeholder="00.000.000/0000-00" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="personType" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Tipo de Pessoa *</label>
+                  <select name="personType" id="personType" required onChange={(e) => setFormData(prev => ({ ...prev, personType: e.target.value as 'F' | 'J' }))} value={formData.personType} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3">
+                    <option value="J">Jurídica</option>
+                    <option value="F">Física</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="stateRegistration" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Inscrição Estadual *</label>
+                  <input type="text" name="stateRegistration" id="stateRegistration" required onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="stateRegistrationType" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Tipo de IE *</label>
+                  <select name="stateRegistrationType" id="stateRegistrationType" required onChange={(e) => setFormData(prev => ({ ...prev, stateRegistrationType: e.target.value as 'C' | 'I' | 'N' }))} value={formData.stateRegistrationType} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3">
+                    <option value="C">Contribuinte</option>
+                    <option value="I">Isento</option>
+                    <option value="N">Não Contribuinte</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="municipalRegistration" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Inscrição Municipal {formData.personType === 'J' ? '*' : ''}</label>
+                  <input type="text" name="municipalRegistration" id="municipalRegistration" required={formData.personType === 'J'} onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
                 </div>
                 <div className="sm:col-span-3">
-                  <label htmlFor="phone" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Telefone</label>
-                  <input type="text" name="phone" id="phone" required onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <label htmlFor="phone" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Telefone *</label>
+                  <input type="text" name="phone" id="phone" required onChange={handleInputChange} placeholder="(00) 00000-0000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
                 </div>
                 <div className="sm:col-span-3">
-                  <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">E-mail Principal</label>
+                  <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">E-mail Principal *</label>
                   <input type="email" name="email" id="email" required onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
                 </div>
                 <div className="sm:col-span-3">
-                  <label htmlFor="submittedBy" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">E-mail do Contato</label>
+                  <label htmlFor="website" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Site</label>
+                  <input type="url" name="website" id="website" onChange={handleInputChange} placeholder="https://www.exemplo.com" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                </div>
+                <div className="sm:col-span-3">
+                  <label htmlFor="submittedBy" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">E-mail do Contato *</label>
                   <input type="email" name="submittedBy" id="submittedBy" required onChange={handleInputChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
                 </div>
               </div>
@@ -203,21 +268,77 @@ const PreRegistrationPage: React.FC = () => {
             <div className="border-b border-gray-200 dark:border-gray-700 pb-8">
               <h2 className="text-xl font-semibold leading-7 text-gray-900 dark:text-gray-100">Endereço</h2>
               <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
-                <div className="col-span-full">
-                  <label htmlFor="street" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Logradouro</label>
+                <div className="sm:col-span-2">
+                  <label htmlFor="zipCode" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">CEP *</label>
+                  <input type="text" name="zipCode" id="zipCode" required onChange={handleAddressChange} placeholder="00000-000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                </div>
+                <div className="sm:col-span-4">
+                  <label htmlFor="street" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Logradouro *</label>
                   <input type="text" name="street" id="street" required onChange={handleAddressChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
                 </div>
                 <div className="sm:col-span-2">
-                  <label htmlFor="city" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Cidade</label>
+                  <label htmlFor="number" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Número *</label>
+                  <input type="text" name="number" id="number" required onChange={handleAddressChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="complement" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Complemento</label>
+                  <input type="text" name="complement" id="complement" onChange={handleAddressChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="neighborhood" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Bairro *</label>
+                  <input type="text" name="neighborhood" id="neighborhood" required onChange={handleAddressChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                </div>
+                <div className="sm:col-span-3">
+                  <label htmlFor="city" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Cidade *</label>
                   <input type="text" name="city" id="city" required onChange={handleAddressChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
                 </div>
-                <div className="sm:col-span-2">
-                  <label htmlFor="state" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Estado</label>
-                  <input type="text" name="state" id="state" required onChange={handleAddressChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                <div className="sm:col-span-3">
+                  <label htmlFor="state" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Estado *</label>
+                  <input type="text" name="state" id="state" required onChange={handleAddressChange} placeholder="UF" maxLength={2} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Abas: Dados Bancários */}
+          {activeTab === 'bancario' && (
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-8">
+              <h2 className="text-xl font-semibold leading-7 text-gray-900 dark:text-gray-100">Dados Bancários</h2>
+              <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
+                <div className="sm:col-span-3">
+                  <label htmlFor="bank" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Banco *</label>
+                  <input type="text" name="bank" id="bank" required onChange={handleBankDataChange} placeholder="Nome do Banco" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                </div>
+                <div className="sm:col-span-3">
+                  <label htmlFor="bankCode" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Código do Banco *</label>
+                  <input type="text" name="bankCode" id="bankCode" required onChange={handleBankDataChange} placeholder="000" maxLength={3} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
                 </div>
                 <div className="sm:col-span-2">
-                  <label htmlFor="zipCode" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">CEP</label>
-                  <input type="text" name="zipCode" id="zipCode" required onChange={handleAddressChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <label htmlFor="agency" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Agência *</label>
+                  <input type="text" name="agency" id="agency" required onChange={handleBankDataChange} placeholder="0000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                </div>
+                <div className="sm:col-span-1">
+                  <label htmlFor="agencyDigit" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Dígito</label>
+                  <input type="text" name="agencyDigit" id="agencyDigit" onChange={handleBankDataChange} placeholder="0" maxLength={1} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                </div>
+                <div className="sm:col-span-3">
+                  <label htmlFor="accountType" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Tipo de Conta *</label>
+                  <select name="accountType" id="accountType" required onChange={handleBankDataChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3">
+                    <option value="">Selecione...</option>
+                    <option value="corrente">Conta Corrente</option>
+                    <option value="poupanca">Conta Poupança</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="account" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Número da Conta *</label>
+                  <input type="text" name="account" id="account" required onChange={handleBankDataChange} placeholder="00000000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                </div>
+                <div className="sm:col-span-1">
+                  <label htmlFor="accountDigit" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Dígito *</label>
+                  <input type="text" name="accountDigit" id="accountDigit" required onChange={handleBankDataChange} placeholder="0" maxLength={2} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                </div>
+                <div className="sm:col-span-3">
+                  <label htmlFor="pixKey" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Chave PIX</label>
+                  <input type="text" name="pixKey" id="pixKey" onChange={handleBankDataChange} placeholder="CPF/CNPJ, e-mail, telefone ou chave aleatória" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
                 </div>
               </div>
             </div>
@@ -232,7 +353,7 @@ const PreRegistrationPage: React.FC = () => {
           </div>
           {/* Botão de Envio */}
           <div className="flex items-center justify-end gap-x-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <button type="submit" disabled={loading} className="inline-flex justify-center items-center px-6 py-3 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-gray-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-200 dark:disabled:bg-gray-900 disabled:text-gray-400 dark:disabled:text-gray-500">
+            <button type="submit" disabled={loading} className="inline-flex justify-center items-center px-6 py-3 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-700 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-200 dark:disabled:bg-gray-900 disabled:text-gray-500 dark:disabled:text-gray-500">
               {loading ? <Loader className="animate-spin h-5 w-5 mr-2" /> : <Send className="h-5 w-5 mr-2" />}
               {loading ? 'Enviando...' : 'Cadastro de Fornecedor'}
             </button>
