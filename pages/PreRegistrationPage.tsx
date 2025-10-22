@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { getInitialTheme, applyTheme, toggleTheme as toggleThemeUtil } from '../src/theme';
 import { firebaseService } from '../services/firebaseService';
 import FileUpload from '../components/FileUpload';
 import { UploadedDocument, Supplier } from '../types';
-import { Loader, CheckCircle, AlertTriangle, Send, Building, Mail, Sun, Moon } from 'lucide-react';
+import { Loader, CheckCircle, AlertTriangle, Send, Sun, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const PreRegistrationPage: React.FC = () => {
@@ -43,7 +44,9 @@ const PreRegistrationPage: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [darkMode, setDarkMode] = useState(() => {
-    return document.body.classList.contains('dark') || document.documentElement.classList.contains('dark');
+    const t = getInitialTheme();
+    if (typeof document !== 'undefined') applyTheme(t);
+    return t === 'dark';
   });
   const [activeTab, setActiveTab] = useState<'empresa' | 'endereco' | 'bancario'>('empresa');
 
@@ -56,19 +59,9 @@ const PreRegistrationPage: React.FC = () => {
 
   const toggleTheme = () => {
     setDarkMode((prev) => {
-      const newMode = !prev;
-      if (newMode) {
-        document.body.classList.add('dark');
-        document.body.classList.remove('light');
-        document.documentElement.classList.add('dark');
-        document.documentElement.classList.remove('light');
-      } else {
-        document.body.classList.remove('dark');
-        document.body.classList.add('light');
-        document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
-      }
-      return newMode;
+      const current = prev ? 'dark' : 'light';
+      const nextTheme = toggleThemeUtil(current);
+      return nextTheme === 'dark';
     });
   };
 
@@ -141,7 +134,7 @@ const PreRegistrationPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center p-4"
+      className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center p-4 top-nav"
       style={{
         backgroundImage: "url('/credores/meioambiental.jpeg')",
         backgroundSize: "cover",
@@ -165,7 +158,7 @@ const PreRegistrationPage: React.FC = () => {
           {darkMode ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-gray-700" />}
         </button>
       </div>
-      <div className="max-w-4xl w-full bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 space-y-6">
+  <div className="max-w-4xl w-full bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 space-y-6 content-surface form-wrapper card">
         <div className="text-center">
           <img
             src="/credores/ambiental.svg"
@@ -179,25 +172,25 @@ const PreRegistrationPage: React.FC = () => {
             Preencha todos os campos para finalizar seu cadastro.
           </p>
         </div>
-        {/* Abas de navegação */}
-        <div className="flex justify-center mb-6 gap-2 flex-wrap">
+  {/* Abas de navegação */}
+  <div className="flex justify-center mb-6 gap-2 flex-wrap tabs">
           <button
             type="button"
-            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'empresa' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
+            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'empresa' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600 active' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
             onClick={() => setActiveTab('empresa')}
           >
             Dados da Empresa
           </button>
           <button
             type="button"
-            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'endereco' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
+            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'endereco' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600 active' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
             onClick={() => setActiveTab('endereco')}
           >
             Endereço
           </button>
           <button
             type="button"
-            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'bancario' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
+            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'bancario' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600 active' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
             onClick={() => setActiveTab('bancario')}
           >
             Dados Bancários

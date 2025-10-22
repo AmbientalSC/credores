@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { UserRole } from '../types';
 import { LogOut, Sun, Moon, Users, Building } from 'lucide-react';
+import { getInitialTheme, applyTheme, toggleTheme as toggleThemeUtil, Theme } from '../src/theme';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
@@ -15,26 +16,15 @@ const Header: React.FC = () => {
     navigate('/admin/login');
   };
 
-  const [darkMode, setDarkMode] = React.useState(() => {
-    return document.body.classList.contains('dark') || document.documentElement.classList.contains('dark');
+  const [theme, setTheme] = React.useState<Theme>(() => {
+    const t = getInitialTheme();
+    // ensure applied on first render
+    if (typeof document !== 'undefined') applyTheme(t);
+    return t;
   });
 
   const toggleTheme = () => {
-    setDarkMode((prev: boolean) => {
-      const newMode = !prev;
-      if (newMode) {
-        document.body.classList.add('dark');
-        document.body.classList.remove('light');
-        document.documentElement.classList.add('dark');
-        document.documentElement.classList.remove('light');
-      } else {
-        document.body.classList.remove('dark');
-        document.body.classList.add('light');
-        document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
-      }
-      return newMode;
-    });
+    setTheme((current) => toggleThemeUtil(current));
   };
 
   return (
@@ -86,7 +76,7 @@ const Header: React.FC = () => {
             aria-label="Alternar tema"
             type="button"
           >
-            {darkMode ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-gray-700" />}
+            {theme === 'dark' ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-gray-700" />}
           </button>
         </div>
       </div>

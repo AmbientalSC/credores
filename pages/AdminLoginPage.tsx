@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
+import { getInitialTheme, applyTheme, toggleTheme as toggleThemeUtil } from '../src/theme';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Lock, Mail, Loader, AlertTriangle, Shield, Sun, Moon } from 'lucide-react';
+import { Lock, Mail, Loader, AlertTriangle, Sun, Moon } from 'lucide-react';
 
 const AdminLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -12,24 +13,16 @@ const AdminLoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(() => {
-    return document.body.classList.contains('dark') || document.documentElement.classList.contains('dark');
+    const t = getInitialTheme();
+    if (typeof document !== 'undefined') applyTheme(t);
+    return t === 'dark';
   });
 
   const toggleTheme = () => {
     setDarkMode((prev) => {
-      const newMode = !prev;
-      if (newMode) {
-        document.body.classList.add('dark');
-        document.body.classList.remove('light');
-        document.documentElement.classList.add('dark');
-        document.documentElement.classList.remove('light');
-      } else {
-        document.body.classList.remove('dark');
-        document.body.classList.add('light');
-        document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
-      }
-      return newMode;
+      const current = prev ? 'dark' : 'light';
+      const nextTheme = toggleThemeUtil(current);
+      return nextTheme === 'dark';
     });
   };
 
@@ -50,7 +43,7 @@ const AdminLoginPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center p-4"
+      className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center p-4 top-nav"
       style={{
         backgroundImage: "url('/credores/meioambiental.jpeg')",
         backgroundSize: "cover",
@@ -73,7 +66,7 @@ const AdminLoginPage: React.FC = () => {
           {darkMode ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-gray-700" />}
         </button>
       </div>
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 space-y-6">
+  <div className="max-w-md w-full bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 space-y-6 content-surface form-wrapper card">
         <div className="text-center">
           <img
             src="/credores/ambiental.svg"

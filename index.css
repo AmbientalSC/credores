@@ -1,33 +1,201 @@
+/*
+  Tema claro — variáveis e estilos base
+  Observação: este arquivo contém blocos que controlam a aparência de:
+    - container do formulário ("card" / ".content-surface") -> caminho aproximado no DOM: //*[@id="root"]/div/div[2]
+    - labels dos campos -> <label> dentro de .card
+    - inputs/selects/textareas -> elementos <input>, <select>, <textarea> dentro de .card (estes mantêm o fundo do Tailwind, mas herdam a cor de texto)
+    - botões primários (.btn-primary)
+    - abas de navegação (.tabs button)
+    - botão de acesso admin no topo (.admin-access)
+    - top-nav (links e controles no topo)
+*/
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --muted: #6b7280; /* gray-500 */
+  --text: #111827; /* gray-900 */
+  --subtle: #374151; /* gray-700 */
+  --primary: #1e40af; /* blue-800 */
+  --primary-600: #2564eb; /* blue-600 */
+  --primary-50: #eff6ff; /* blue-50 */
+  --success: #16a34a;
+  --danger: #dc2626;
+  --card-shadow: 0 6px 20px rgba(16,24,40,0.08);
+  --radius-lg: 12px;
+  /* Form controls */
+  --input-bg: #f3f4f6; /* gray-100 */
+  --input-text: #111827; /* gray-900 */
+  --input-border: #e5e7eb; /* gray-200 */
+  --input-placeholder: #9ca3af; /* gray-400 */
+  --button-bg: var(--primary);
+  --button-text: #ffffff;
+}
+
+/* Aplicar ao modo claro quando body.light estiver presente */
+/* Afeta: cor de fundo global e cor principal do texto da página */
 body.light {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Melhorar contraste de títulos no modo claro
+   Afeta: h1,h2,h3,h4 dentro do corpo da página (títulos principais como 'Cadastro de Fornecedor') */
+body.light h1, body.light h2, body.light h3, body.light h4 {
+  color: var(--text) !important;
+}
+
+/* Superfícies / cartões (container do formulário)
+   Afeta: elementos com classe .card ou bg-white usados como painel do formulário.
+   Exemplo DOM: //*[@id="root"]/div/div[2] .card
+*/
+.card, body.light .bg-white {
+  background-color: var(--surface) !important;
+  box-shadow: var(--card-shadow) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+/* Ajustes de fundo e cor de texto do container do formulário
+   - Importante: NÃO altera o fundo dos inputs. Apenas altera o fundo
+     do painel (card / content-surface) para garantir legibilidade
+   Afeta: elemento que contém o formulário e tudo que está dentro dele
+   Exemplo DOM: //*[@id="root"]/div/div[2] (container principal do form)
+*/
+body.light .content-surface, body.light .card {
+  background-color: rgba(255,255,255,0.95) !important; /* branco translúcido no modo claro */
+  color: var(--text) !important; /* cor do texto dentro do card */
+}
+
+/* Modo escuro: fundo do card e cor do texto dentro do card */
+body.dark .content-surface, body.dark .card, .dark .content-surface, .dark .card {
+  background-color: #0b1220 !important; /* fundo escuro para o painel */
+  color: #e5e7eb !important; /* texto claro dentro do painel */
+}
+
+/* Os inputs/selects devem herdar a cor do container (labels e texto)
+   mas manter o seu próprio background definido pelas classes do Tailwind.
+   Afeta: <input>, <select>, <textarea> dentro do .card.
+   Exemplo DOM: //*[@id="root"]/div/div[2]//input
+*/
+.card input, .card select, .card textarea {
+  color: inherit !important;
+}
+
+/* Ações primárias (botões)
+   Afeta: botões com classe .btn-primary ou que recebem cor de fundo via classes utilitárias
+   Exemplo DOM: botão de envio no final do formulário
+*/
+.btn-primary, button[class*="bg-"].btn-primary {
+  background-color: var(--button-bg) !important;
+  color: var(--button-text) !important;
+  border-radius: 8px !important;
+  padding: .5rem .9rem !important;
+  box-shadow: 0 6px 16px rgba(30,64,175,0.12);
+  transition: transform .12s ease, box-shadow .12s ease;
+  border: none !important;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(30,64,175,0.14); }
+
+/* Botões no modo escuro: mantém contraste */
+body.dark .btn-primary, .dark .btn-primary {
+  background-color: #2564eb !important; /* ligeiramente mais brilhante */
+  color: #fff !important;
+}
+
+/* Abas (tabs)
+   Afeta: botões de navegação de abas (Dados da Empresa / Endereço / Dados Bancários)
+   Exemplo DOM: //*[@id="root"]/div/div[2]//div[contains(@class,'tabs')]
+*/
+.tabs button {
+  color: var(--subtle);
+}
+.tabs button.active {
+  color: var(--primary) !important;
+  border-color: var(--primary-600) !important;
+  background-color: var(--primary-50) !important;
+}
+
+/* Dark mode: ajustar cor das abas e da aba ativa para maior contraste */
+body.dark .tabs button, .dark .tabs button {
+  color: #94a3b8 !important; /* gray-400 - labels das abas em dark */
+}
+body.dark .tabs button.active, .dark .tabs button.active {
+  color: #93c5fd !important; /* azul claro para o texto da aba ativa */
+  border-color: #2564eb !important; /* azul primário mais vivo */
+  background-color: rgba(37,99,235,0.08) !important; /* leve tonalidade azul no fundo da aba ativa */
+}
+
+/* Ajuste adicional: garantir boa legibilidade do texto dentro do card no modo escuro */
+body.dark .card, .dark .card {
+  color: #e6eef8 !important; /* tom claro para textos e labels */
+}
+
+/* Botão de acesso admin (top-right)
+   Afeta: botão 'Acesso Admin' no canto superior direito
+   Exemplo DOM: //*[@id="root"]/div/div[1]//a[contains(@class,'admin-access')]
+*/
+.admin-access {
+  color: var(--primary) !important;
   background-color: #fff !important;
-  color: #111 !important;
+  border: 1px solid #e6eef8 !important;
 }
-body.light .bg-gray-50 {
-  background-color: #fff !important;
+.admin-access:hover { background-color: var(--primary-50) !important; }
+
+/* Ensure header/top-nav buttons visible in dark mode */
+body.dark .top-nav a, body.dark .top-nav button, .dark .top-nav a, .dark .top-nav button {
+  color: #e6eef8 !important;
 }
-body.light .text-gray-900,
-body.light .dark\:text-gray-100 {
-  color: #222 !important;
+
+/* Container do formulário (espaçamento) */
+.form-wrapper {
+  padding: 2rem !important;
+  border-radius: 14px !important;
 }
-body.light .bg-white {
-  background-color: #fff !important;
+
+/* Utility tweaks */
+.text-muted { color: var(--muted) !important; }
+.text-strong { color: var(--text) !important; }
+
+/* Accessibility: focus rings */
+*:focus { outline: none; }
+.focus-ring:focus { box-shadow: 0 0 0 4px rgba(37,99,235,0.12); border-color: var(--primary-600) !important; }
+
+/* Keep legacy dark overrides working but ensure light mode clarity */
+body.light .dark\:text-gray-100 { color: var(--text) !important; }
+body.light .dark\:bg-gray-700 { background-color: #dae1ee !important; }
+
+/* Pequeno título do formulário */
+.form-title { font-size: 1.125rem; font-weight: 600; color: var(--text); }
+
+/* Ensure navigation links/buttons in header are visible */
+.top-nav a, .top-nav button { color: var(--primary) !important; }
+
+/* Tornar os labels mais legíveis dentro do cartão / formulário
+   Afeta: <label> dentro de .card / .content-surface
+   Exemplo DOM: //*[@id="root"]/div/div[2]//label
+*/
+.card label, .content-surface label {
+  color: var(--subtle) !important; /* padrão levemente atenuado */
+  font-weight: 600 !important;
+  font-size: 0.875rem !important; /* tamanho legível */
 }
-body.light .dark\:bg-gray-900 {
-  background-color: #e2dfdfaf !important;
+
+/* Cor mais forte para labels no modo claro */
+body.light .card label, body.light .content-surface label {
+  color: #374151 !important; /* gray-700 - mais legível */
 }
-body.light .dark\:bg-gray-800 {
-  background-color: #bebebe81 !important;
+
+/* Cor mais clara para labels no modo escuro */
+body.dark .card label, body.dark .content-surface label,
+.dark .card label, .dark .content-surface label {
+  color: #d1d5db !important; /* gray-300 */
 }
-body.light .dark\:text-gray-400 {
-  color: #333 !important;
-}
-body.light .dark\:text-gray-200 {
-  color: #222 !important;
-}
-body.light input,
-body.light select,
-body.light textarea {
-  background-color: #d9dbdf !important;
-  color: #111 !important;
-  border-color: #d9dbdf !important;
-} 
+
+/* Make the content wrapper slightly translucent over the background image */
+.content-surface { background-color: rgb(255, 255, 255); }
+
+/* fallback: preserve original small overrides from earlier file */
+/* legacy selectors to avoid regressions */
+body.light .bg-gray-50 { background-color: var(--bg) !important; }
