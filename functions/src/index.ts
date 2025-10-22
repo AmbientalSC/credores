@@ -236,9 +236,13 @@ export const createSiengeCreditor = onCall({ secrets: [siengeUsername, siengePas
         }
 
         // 7. Obter configurações
-        const username = siengeUsername.value();
-        const password = siengePassword.value();
+        // Read and sanitize secrets (trim to remove trailing newlines or spaces)
+        const rawUsername = siengeUsername.value();
+        const rawPassword = siengePassword.value();
         const baseUrl = siengeBaseUrl.value();
+
+        const username = rawUsername ? String(rawUsername).trim() : '';
+        const password = rawPassword ? String(rawPassword).trim() : '';
 
         if (!username || !password) {
             throw new HttpsError(
@@ -251,13 +255,12 @@ export const createSiengeCreditor = onCall({ secrets: [siengeUsername, siengePas
         const base64Credentials = Buffer.from(`${username}:${password}`).toString('base64');
         const siengeUrl = `${baseUrl}/creditors`;
 
-        logger.info("Chamando API Sienge:", {
+        // Log minimal info to avoid leaking credentials or payloads
+        logger.info("Chamando API Sienge", {
             url: siengeUrl,
             method: "POST",
-            username: username,
-            hasPassword: !!password,
-            base64Credentials: base64Credentials,
-            payload: siengeData,
+            companyName: siengeData?.name,
+            hasAuth: !!(username && password),
         });
 
         const response = await axios.post(
@@ -272,12 +275,11 @@ export const createSiengeCreditor = onCall({ secrets: [siengeUsername, siengePas
             }
         );
 
-        // Log da resposta completa para debug
-        logger.info("Resposta da API Sienge:", {
+        // Log de resposta resumida (não armazenamos cabeçalhos ou payloads completos aqui)
+        logger.info("Resposta da API Sienge", {
             status: response.status,
             statusText: response.statusText,
-            data: response.data,
-            headers: response.headers,
+            siengeCreditorId: response.data?.id || response.data?.creditorId || response.data?.entityId || null,
         });
 
         // Extrair ID do credor da resposta (pode ser 'id', 'creditorId', etc)
@@ -306,10 +308,9 @@ export const createSiengeCreditor = onCall({ secrets: [siengeUsername, siengePas
 
         await supplierDoc.ref.update(updateData);
 
-        logger.info("Credor criado no Sienge com sucesso:", {
+        logger.info("Credor criado no Sienge com sucesso", {
             supplierId,
             siengeCreditorId,
-            responseData: response.data,
         });
 
         return {
@@ -337,6 +338,14 @@ export const createSiengeCreditor = onCall({ secrets: [siengeUsername, siengePas
                 if (error.response && error.response.data !== undefined) {
                     siengeIntegrationError.response = error.response.data;
                 }
+
+                // Remove any undefined properties to avoid Firestore rejecting the update
+                Object.keys(siengeIntegrationError).forEach((k) => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    if ((siengeIntegrationError as any)[k] === undefined) {
+                        delete (siengeIntegrationError as any)[k];
+                    }
+                });
 
                 await admin.firestore().collection("suppliers").doc(supplierId).update({
                     siengeIntegrationStatus: "error",
