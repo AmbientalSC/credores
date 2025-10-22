@@ -146,6 +146,8 @@ const PreRegistrationPage: React.FC = () => {
         backgroundImage: "url('/credores/meioambiental.jpeg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
+        // Fix background relative to viewport so crop doesn't change when content height changes
+        backgroundAttachment: 'fixed',
         backgroundRepeat: "no-repeat"
       }}
     >
