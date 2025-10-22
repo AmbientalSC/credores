@@ -153,7 +153,7 @@ const PreRegistrationPage: React.FC = () => {
     >
       <div className="absolute top-4 right-4 flex items-center gap-2">
         <Link to="/admin/login"
-          className="font-medium px-4 py-2 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-700 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+          className="font-medium px-4 py-2 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-800 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-500 dark:hover:text-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
           Acesso Admin
         </Link>
         <button
@@ -183,21 +183,21 @@ const PreRegistrationPage: React.FC = () => {
         <div className="flex justify-center mb-6 gap-2 flex-wrap">
           <button
             type="button"
-            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'empresa' ? 'border-blue-600 text-blue-700 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
+            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'empresa' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
             onClick={() => setActiveTab('empresa')}
           >
             Dados da Empresa
           </button>
           <button
             type="button"
-            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'endereco' ? 'border-blue-600 text-blue-700 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
+            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'endereco' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
             onClick={() => setActiveTab('endereco')}
           >
             Endereço
           </button>
           <button
             type="button"
-            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'bancario' ? 'border-blue-600 text-blue-700 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
+            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'bancario' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
             onClick={() => setActiveTab('bancario')}
           >
             Dados Bancários

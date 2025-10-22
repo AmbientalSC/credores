@@ -61,7 +61,7 @@ const AdminLoginPage: React.FC = () => {
       }}
     >
       <div className="absolute top-4 right-4 flex items-center gap-2">
-        <Link to="/" className="font-medium px-4 py-2 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-700 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+  <Link to="/" className="font-medium px-4 py-2 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-800 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-500 dark:hover:text-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
           Cadastro de Fornecedor
         </Link>
         <button
@@ -145,7 +145,7 @@ const AdminLoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex justify-center items-center w-full px-6 py-3 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-700 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-200 dark:disabled:bg-gray-900 disabled:text-gray-500 dark:disabled:text-gray-500"
+              className="inline-flex justify-center items-center w-full px-6 py-3 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-800 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-500 dark:hover:text-indigo-300 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:bg-gray-200 dark:disabled:bg-gray-900 disabled:text-gray-500 dark:disabled:text-gray-500"
             >
               {loading ? (
                 <Loader className="animate-spin h-5 w-5 mr-2" />
