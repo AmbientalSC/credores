@@ -1,37 +1,52 @@
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { firebaseService } from '../services/firebaseService';
+import { Loader, Search, Trash2 } from 'lucide-react';
+
 import { useAuth } from '../hooks/useAuth';
-import { UserRole } from '../types';
-import { Supplier, SupplierStatus } from '../types';
-import { Loader, Search, Filter, Trash2 } from 'lucide-react';
+import { firebaseService } from '../services/firebaseService';
+import { Supplier, SupplierStatus, UserRole } from '../types';
+
+const statusLabels: Record<SupplierStatus, string> = {
+  [SupplierStatus.Aprovado]: 'Aprovado',
+  [SupplierStatus.Reprovado]: 'Reprovado',
+  [SupplierStatus.EmAnalise]: 'Em análise',
+  [SupplierStatus.Pendente]: 'Pendente',
+};
 
 const StatusBadge: React.FC<{ status: SupplierStatus }> = ({ status }) => {
-  const statusStyles = {
-    [SupplierStatus.Aprovado]: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-    [SupplierStatus.Reprovado]: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-    [SupplierStatus.EmAnalise]: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-    [SupplierStatus.Pendente]: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  };
-  const statusText = {
-    [SupplierStatus.Aprovado]: 'Aprovado',
-    [SupplierStatus.Reprovado]: 'Reprovado',
-    [SupplierStatus.EmAnalise]: 'Em Análise',
-    [SupplierStatus.Pendente]: 'Pendente',
-  }
+  const variant = status.replace('_', '-');
   return (
-    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusStyles[status]}`}>
-      {statusText[status]}
+    <span className={`status-chip status-chip--${variant}`}>
+      <span className="status-chip__dot" aria-hidden />
+      {statusLabels[status]}
     </span>
   );
 };
 
+const formatDate = (value: Date | string) =>
+  new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(value));
+
+const statusOptions: Array<'all' | SupplierStatus> = [
+  'all',
+  SupplierStatus.Pendente,
+  SupplierStatus.EmAnalise,
+  SupplierStatus.Aprovado,
+  SupplierStatus.Reprovado,
+];
+
+const statusFilterLabels: Record<'all', string> & Record<SupplierStatus, string> = {
+  all: 'Todos',
+  ...statusLabels,
+};
 
 const AdminDashboardPage: React.FC = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState<SupplierStatus | 'all'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | SupplierStatus>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
@@ -46,21 +61,78 @@ const AdminDashboardPage: React.FC = () => {
         const data = await firebaseService.getSuppliers();
         setSuppliers(data);
       } catch (error) {
-        console.error("Failed to fetch suppliers", error);
+        console.error('Failed to fetch suppliers', error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchSuppliers();
   }, []);
 
+  const statusCounts = useMemo(() => {
+    const base: Record<SupplierStatus, number> = {
+      [SupplierStatus.Aprovado]: 0,
+      [SupplierStatus.Reprovado]: 0,
+      [SupplierStatus.EmAnalise]: 0,
+      [SupplierStatus.Pendente]: 0,
+    };
+
+    suppliers.forEach((supplier) => {
+      base[supplier.status] += 1;
+    });
+
+    return base;
+  }, [suppliers]);
+
+  const metrics = useMemo(
+    () => [
+      {
+        id: 'total',
+        label: 'Total cadastrados',
+        value: suppliers.length,
+      },
+      {
+        id: 'pending',
+        label: 'Pendentes',
+        value: statusCounts[SupplierStatus.Pendente],
+        tone: 'pending' as const,
+      },
+      {
+        id: 'analysis',
+        label: 'Em análise',
+        value: statusCounts[SupplierStatus.EmAnalise],
+        tone: 'warning' as const,
+      },
+      {
+        id: 'approved',
+        label: 'Aprovados',
+        value: statusCounts[SupplierStatus.Aprovado],
+        tone: 'success' as const,
+      },
+      {
+        id: 'rejected',
+        label: 'Reprovados',
+        value: statusCounts[SupplierStatus.Reprovado],
+        tone: 'danger' as const,
+      },
+    ],
+    [statusCounts, suppliers.length],
+  );
+
   const filteredSuppliers = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
     return suppliers
-      .filter(s => filterStatus === 'all' || s.status === filterStatus)
-      .filter(s =>
-        s.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.cnpj.includes(searchTerm)
-      );
+      .filter((supplier) => filterStatus === 'all' || supplier.status === filterStatus)
+      .filter((supplier) => {
+        if (!normalizedSearch) return true;
+        return (
+          supplier.companyName.toLowerCase().includes(normalizedSearch) ||
+          supplier.tradeName?.toLowerCase().includes(normalizedSearch) ||
+          supplier.cnpj.includes(normalizedSearch)
+        );
+      });
   }, [suppliers, filterStatus, searchTerm]);
 
   const handleDeleteClick = (supplier: Supplier) => {
@@ -74,12 +146,12 @@ const AdminDashboardPage: React.FC = () => {
     setDeleteLoading(true);
     try {
       await firebaseService.deleteSupplier(supplierToDelete.id);
-      setSuppliers(prev => prev.filter(s => s.id !== supplierToDelete.id));
+      setSuppliers((prev) => prev.filter((supplier) => supplier.id !== supplierToDelete.id));
       setDeleteModalOpen(false);
       setSupplierToDelete(null);
     } catch (error) {
-      console.error("Failed to delete supplier", error);
-      alert("Erro ao excluir fornecedor. Tente novamente.");
+      console.error('Failed to delete supplier', error);
+      alert('Erro ao excluir fornecedor. Tente novamente.');
     } finally {
       setDeleteLoading(false);
     }
@@ -92,136 +164,166 @@ const AdminDashboardPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader className="animate-spin h-8 w-8 text-indigo-500" />
+      <div className="admin-page__loading">
+        <Loader className="admin-spinner" />
+        <span>Carregando fornecedores...</span>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="bg-white dark:bg-gray-900 shadow-lg rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Lista de Fornecedores</h2>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Gerencie e analise os cadastros de fornecedores.</p>
-            </div>
-            <div className="relative w-full sm:w-64">
-              <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                <Search className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Buscar por nome ou CNPJ..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
-            </div>
-          </div>
-          <div className="mt-6 flex items-center space-x-2 overflow-x-auto pb-2">
-            <Filter className="h-5 w-5 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0" />
-            {(['all', ...Object.values(SupplierStatus)] as const).map(status => (
-              <button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                className={`px-4 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap ${filterStatus === status
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-                  }`}
-              >
-                {status === 'all' ? 'Todos' : {
-                  [SupplierStatus.Aprovado]: 'Aprovados',
-                  [SupplierStatus.Reprovado]: 'Reprovados',
-                  [SupplierStatus.EmAnalise]: 'Em Análise',
-                  [SupplierStatus.Pendente]: 'Pendentes',
-                }[status]}
-              </button>
-            ))}
+    <div className="admin-page">
+      <header className="admin-page__header">
+        <div>
+          <h1>Fornecedores</h1>
+          <p className="admin-page__subtitle">
+            Acompanhe cada etapa do fluxo de aprovação e mantenha o pipeline organizado.
+          </p>
+        </div>
+      </header>
+
+      <section className="admin-metrics">
+        {metrics.map((metric) => (
+          <article
+            key={metric.id}
+            className={`metric-card${metric.tone ? ` metric-card--${metric.tone}` : ''}`}
+          >
+            <span className="metric-card__label">{metric.label}</span>
+            <span className="metric-card__value">{metric.value}</span>
+          </article>
+        ))}
+      </section>
+
+      <section className="admin-card">
+        <div className="admin-card__header">
+          <div>
+            <h2>Pipeline de fornecedores</h2>
+            <p>Controle o andamento dos cadastros enviados.</p>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-800">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-100 uppercase tracking-wider">Empresa</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-100 uppercase tracking-wider">CNPJ</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-100 uppercase tracking-wider">Data de Cadastro</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-100 uppercase tracking-wider">Status</th>
-                <th scope="col" className="relative px-6 py-3"><span className="sr-only">Ações</span></th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredSuppliers.length > 0 ? filteredSuppliers.map((supplier) => (
-                <tr key={supplier.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{supplier.companyName}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{supplier.tradeName}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-400 font-mono">{supplier.cnpj}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-400">{new Date(supplier.createdAt).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={supplier.status} />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => navigate(`/admin/supplier/${supplier.id}`)}
-                        className="text-blue-700 hover:text-blue-900 dark:text-indigo-400 dark:hover:text-indigo-200 font-semibold"
-                      >
-                        Ver Detalhes
-                      </button>
-                      {user?.role === UserRole.Admin && (
-                        <button
-                          onClick={() => handleDeleteClick(supplier)}
-                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                          title="Excluir fornecedor"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              )) : (
+        <div className="admin-toolbar">
+          <div className="admin-toolbar__search">
+            <Search className="admin-toolbar__icon" aria-hidden />
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Buscar por nome, fantasia ou CNPJ"
+              className="admin-input"
+            />
+          </div>
+
+          <div className="admin-toolbar__filters" aria-label="Filtrar por status">
+            <span className="admin-toolbar__label">Status</span>
+            <div className="filter-pill-group">
+              {statusOptions.map((statusKey) => {
+                const isActive = filterStatus === statusKey;
+                const count =
+                  statusKey === 'all' ? suppliers.length : statusCounts[statusKey as SupplierStatus];
+
+                return (
+                  <button
+                    key={statusKey}
+                    type="button"
+                    className={`filter-pill${isActive ? ' filter-pill--active' : ''}`}
+                    onClick={() => setFilterStatus(statusKey)}
+                  >
+                    <span>{statusFilterLabels[statusKey]}</span>
+                    <span className="filter-pill__count">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="admin-table-container" role="region" aria-live="polite">
+          {filteredSuppliers.length > 0 ? (
+            <table className="admin-table">
+              <thead>
                 <tr>
-                  <td colSpan={5} className="text-center py-10 text-gray-600 dark:text-gray-400">
-                    Nenhum fornecedor encontrado com os filtros atuais.
-                  </td>
+                  <th scope="col">Empresa</th>
+                  <th scope="col">CNPJ</th>
+                  <th scope="col">Cadastro</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" className="table-actions__header">
+                    Ações
+                  </th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredSuppliers.map((supplier) => (
+                  <tr key={supplier.id}>
+                    <td>
+                      <div className="table-primary">{supplier.companyName}</div>
+                      {supplier.tradeName && <div className="table-secondary">{supplier.tradeName}</div>}
+                    </td>
+                    <td className="table-mono">{supplier.cnpj}</td>
+                    <td className="table-date">{formatDate(supplier.createdAt)}</td>
+                    <td>
+                      <StatusBadge status={supplier.status} />
+                    </td>
+                    <td>
+                      <div className="table-actions">
+                        <button
+                          type="button"
+                          className="admin-link"
+                          onClick={() => navigate(`/admin/supplier/${supplier.id}`)}
+                        >
+                          Ver detalhes
+                        </button>
+                        {user?.role === UserRole.Admin && (
+                          <button
+                            type="button"
+                            className="admin-link admin-link--danger"
+                            onClick={() => handleDeleteClick(supplier)}
+                          >
+                            <Trash2 size={16} aria-hidden />
+                            Excluir
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="table-empty-state">
+              <h3>Sem fornecedores neste filtro</h3>
+              <p>
+                Ajuste os filtros ou refine a busca para visualizar outros fornecedores cadastrados.
+              </p>
+            </div>
+          )}
         </div>
-      </div>
+      </section>
 
-      {/* Modal de confirmação para exclusão */}
       {deleteModalOpen && supplierToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-              Confirmar Exclusão
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Tem certeza que deseja excluir o fornecedor <strong>{supplierToDelete.name}</strong>?
-              Esta ação não pode ser desfeita.
-            </p>
-            <div className="flex justify-end space-x-3">
+        <div className="admin-modal__backdrop" role="dialog" aria-modal="true">
+          <div className="admin-modal">
+            <div className="admin-modal__body">
+              <h3>Excluir fornecedor</h3>
+              <p>
+                Tem certeza de que deseja remover{' '}
+                <strong>{supplierToDelete.companyName}</strong> do sistema? Essa ação não pode ser
+                desfeita.
+              </p>
+            </div>
+            <div className="admin-modal__actions">
               <button
-                onClick={() => {
-                  setDeleteModalOpen(false);
-                  setSupplierToDelete(null);
-                }}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                type="button"
+                className="admin-button admin-button--ghost"
+                onClick={handleDeleteCancel}
               >
                 Cancelar
               </button>
               <button
+                type="button"
+                className="admin-button admin-button--danger"
                 onClick={handleDeleteConfirm}
                 disabled={deleteLoading}
-                className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {deleteLoading ? 'Excluindo...' : 'Excluir'}
               </button>
@@ -229,7 +331,7 @@ const AdminDashboardPage: React.FC = () => {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

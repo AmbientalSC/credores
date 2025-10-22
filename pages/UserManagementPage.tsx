@@ -1,469 +1,598 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, UserPlus, Users, Eye, Trash2, Ban, CheckCircle } from 'lucide-react';
-import { User, UserRole, UserStatus } from '../types';
+import { Ban, CheckCircle, Loader, Search, Trash2, UserPlus, Users as UsersIcon } from 'lucide-react';
+
 import { firebaseService } from '../services/firebaseService';
 import { useAuth } from '../hooks/useAuth';
+import { User, UserRole, UserStatus } from '../types';
 
-const StatusBadge: React.FC<{ status: UserStatus }> = ({ status }) => {
-    const statusStyles = {
-        active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-        inactive: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-    };
-
-    const statusText = {
-        active: 'Ativo',
-        inactive: 'Inativo'
-    };
-
-    return (
-        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusStyles[status]}`}>
-            {statusText[status]}
-        </span>
-    );
+const userStatusLabels: Record<UserStatus, string> = {
+  active: 'Ativo',
+  inactive: 'Inativo',
 };
 
-const RoleBadge: React.FC<{ role: UserRole }> = ({ role }) => {
-    const roleStyles = {
-        admin: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-        user: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-        viewer: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-    };
+const roleLabels: Record<UserRole, string> = {
+  admin: 'Administrador',
+  user: 'Usuario',
+  viewer: 'Visualizador',
+};
 
-    const roleText = {
-        admin: 'Administrador',
-        user: 'Usuário',
-        viewer: 'Visualizador'
-    };
+const StatusBadge: React.FC<{ status: UserStatus }> = ({ status }) => (
+  <span className={`status-chip status-chip--user-${status}`}>
+    <span className="status-chip__dot" aria-hidden />
+    {userStatusLabels[status]}
+  </span>
+);
 
-    return (
-        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${roleStyles[role]}`}>
-            {roleText[role]}
-        </span>
-    );
+const RoleBadge: React.FC<{ role: UserRole }> = ({ role }) => (
+  <span className={`role-chip role-chip--${role}`}>{roleLabels[role]}</span>
+);
+
+const formatDate = (value: Date | string) =>
+  new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(value));
+
+const statusOptions: Array<'all' | UserStatus> = ['all', UserStatus.Active, UserStatus.Inactive];
+const roleOptions: Array<'all' | UserRole> = ['all', UserRole.Admin, UserRole.User, UserRole.Viewer];
+
+const statusFilterLabels: Record<'all', string> & Record<UserStatus, string> = {
+  all: 'Todos',
+  active: 'Ativos',
+  inactive: 'Inativos',
+};
+
+const roleFilterLabels: Record<'all', string> & Record<UserRole, string> = {
+  all: 'Todos',
+  admin: 'Administradores',
+  user: 'Usuarios',
+  viewer: 'Visualizadores',
 };
 
 const UserManagementPage: React.FC = () => {
-    const navigate = useNavigate();
-    const { user } = useAuth();
-    const [users, setUsers] = useState<User[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [filterStatus, setFilterStatus] = useState<UserStatus | 'all'>('all');
-    const [filterRole, setFilterRole] = useState<UserRole | 'all'>('all');
-    const [searchTerm, setSearchTerm] = useState('');
+  const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
 
-    // Create user modal states
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [createLoading, setCreateLoading] = useState(false);
-    const [newUser, setNewUser] = useState({
-        email: '',
-        name: '',
-        role: UserRole.User,
-        password: ''
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState<'all' | UserStatus>('all');
+  const [filterRole, setFilterRole] = useState<'all' | UserRole>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [newUser, setNewUser] = useState({
+    email: '',
+    name: '',
+    role: UserRole.User,
+    password: '',
+  });
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [userToAction, setUserToAction] = useState<User | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  useEffect(() => {
+    if (!currentUser) {
+      navigate('/admin/login');
+      return;
+    }
+    void loadUsers();
+  }, [currentUser, navigate]);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const usersData = await firebaseService.getUsers();
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const statusCounts = useMemo(() => {
+    const base: Record<UserStatus, number> = {
+      active: 0,
+      inactive: 0,
+    };
+
+    users.forEach((user) => {
+      base[user.status] += 1;
     });
 
-    // Delete/Update user modal states
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [showStatusModal, setShowStatusModal] = useState(false);
-    const [userToAction, setUserToAction] = useState<User | null>(null);
-    const [actionLoading, setActionLoading] = useState(false);
+    return base;
+  }, [users]);
 
-    useEffect(() => {
-        if (!user) {
-            navigate('/admin/login');
-            return;
-        }
-        loadUsers();
-    }, [user, navigate]);
-
-    const loadUsers = async () => {
-        try {
-            setLoading(true);
-            const usersData = await firebaseService.getUsers();
-            setUsers(usersData);
-        } catch (error) {
-            console.error('Failed to load users:', error);
-        } finally {
-            setLoading(false);
-        }
+  const roleCounts = useMemo(() => {
+    const base: Record<UserRole, number> = {
+      admin: 0,
+      user: 0,
+      viewer: 0,
     };
 
-    const filteredUsers = useMemo(() => {
-        return users
-            .filter(u => filterStatus === 'all' || u.status === filterStatus)
-            .filter(u => filterRole === 'all' || u.role === filterRole)
-            .filter(u =>
-                u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                u.email.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-    }, [users, filterStatus, filterRole, searchTerm]);
+    users.forEach((user) => {
+      base[user.role] += 1;
+    });
 
-    const handleCreateUser = async () => {
-        if (!newUser.email || !newUser.name || !newUser.password) {
-            alert('Preencha todos os campos obrigatórios');
-            return;
-        }
+    return base;
+  }, [users]);
 
-        setCreateLoading(true);
-        try {
-            await firebaseService.createUser({
-                ...newUser,
-                createdBy: user?.email || 'admin'
-            });
-            setShowCreateModal(false);
-            setNewUser({ email: '', name: '', role: UserRole.User, password: '' });
-            await loadUsers();
-        } catch (error) {
-            console.error('Failed to create user:', error);
-            alert('Erro ao criar usuário. Tente novamente.');
-        } finally {
-            setCreateLoading(false);
-        }
-    };
+  const metrics = useMemo(
+    () => [
+      {
+        id: 'total',
+        label: 'Usuarios ativos na plataforma',
+        value: users.length,
+      },
+      {
+        id: 'active',
+        label: 'Com acesso habilitado',
+        value: statusCounts[UserStatus.Active],
+        tone: 'success' as const,
+      },
+      {
+        id: 'inactive',
+        label: 'Suspensos',
+        value: statusCounts[UserStatus.Inactive],
+        tone: 'warning' as const,
+      },
+      {
+        id: 'admins',
+        label: 'Administradores',
+        value: roleCounts[UserRole.Admin],
+        tone: 'accent' as const,
+      },
+    ],
+    [roleCounts, statusCounts, users.length],
+  );
 
-    const handleDeleteUser = async () => {
-        if (!userToAction) return;
+  const filteredUsers = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
 
-        setActionLoading(true);
-        try {
-            await firebaseService.deleteUser(userToAction.id);
-            setUsers(prev => prev.filter(u => u.id !== userToAction.id));
-            setShowDeleteModal(false);
-            setUserToAction(null);
-        } catch (error) {
-            console.error('Failed to delete user:', error);
-            alert('Erro ao excluir usuário. Tente novamente.');
-        } finally {
-            setActionLoading(false);
-        }
-    };
-
-    const handleToggleUserStatus = async () => {
-        if (!userToAction) return;
-
-        const newStatus = userToAction.status === UserStatus.Active ? UserStatus.Inactive : UserStatus.Active;
-
-        setActionLoading(true);
-        try {
-            await firebaseService.updateUserStatus(userToAction.id, newStatus);
-            setUsers(prev => prev.map(u =>
-                u.id === userToAction.id ? { ...u, status: newStatus } : u
-            ));
-            setShowStatusModal(false);
-            setUserToAction(null);
-        } catch (error) {
-            console.error('Failed to update user status:', error);
-            alert('Erro ao atualizar status do usuário. Tente novamente.');
-        } finally {
-            setActionLoading(false);
-        }
-    };
-
-    if (loading) {
+    return users
+      .filter((user) => filterStatus === 'all' || user.status === filterStatus)
+      .filter((user) => filterRole === 'all' || user.role === filterRole)
+      .filter((user) => {
+        if (!normalizedSearch) return true;
         return (
-            <div className="flex justify-center items-center h-64">
-                <div className="text-lg text-gray-600 dark:text-gray-400">Carregando usuários...</div>
-            </div>
+          user.name.toLowerCase().includes(normalizedSearch) ||
+          user.email.toLowerCase().includes(normalizedSearch)
         );
+      });
+  }, [users, filterStatus, filterRole, searchTerm]);
+
+  const handleCreateUser = async () => {
+    if (!newUser.email || !newUser.name || !newUser.password) {
+      alert('Preencha todos os campos obrigatorios.');
+      return;
     }
 
+    setCreateLoading(true);
+    try {
+      await firebaseService.createUser({
+        ...newUser,
+        createdBy: currentUser?.email || 'admin',
+      });
+      setShowCreateModal(false);
+      setNewUser({ email: '', name: '', role: UserRole.User, password: '' });
+      await loadUsers();
+    } catch (error) {
+      console.error('Failed to create user:', error);
+      alert('Erro ao criar usuario. Tente novamente.');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToAction) return;
+
+    setActionLoading(true);
+    try {
+      await firebaseService.deleteUser(userToAction.id);
+      setUsers((prev) => prev.filter((user) => user.id !== userToAction.id));
+      setShowDeleteModal(false);
+      setUserToAction(null);
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      alert('Erro ao excluir usuario. Tente novamente.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggleUserStatus = async () => {
+    if (!userToAction) return;
+
+    const nextStatus =
+      userToAction.status === UserStatus.Active ? UserStatus.Inactive : UserStatus.Active;
+
+    setActionLoading(true);
+    try {
+      await firebaseService.updateUserStatus(userToAction.id, nextStatus);
+      setUsers((prev) =>
+        prev.map((user) => (user.id === userToAction.id ? { ...user, status: nextStatus } : user)),
+      );
+      setShowStatusModal(false);
+      setUserToAction(null);
+    } catch (error) {
+      console.error('Failed to update user status:', error);
+      alert('Erro ao atualizar status. Tente novamente.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  if (loading) {
     return (
-        <>
-            <div className="bg-white dark:bg-gray-900 shadow-lg rounded-lg overflow-hidden">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Gerenciamento de Usuários</h2>
-                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Gerencie usuários do sistema.</p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <div className="relative w-full sm:w-64">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                                    <Search className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Buscar por nome ou email..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                            </div>
-                            {user?.role === UserRole.Admin && (
-                                <button
-                                    onClick={() => setShowCreateModal(true)}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                                >
-                                    <UserPlus className="h-4 w-4" />
-                                    Novo Usuário
-                                </button>
-                            )}
-                        </div>
-                    </div>
+      <div className="admin-page__loading">
+        <Loader className="admin-spinner" />
+        <span>Carregando usuarios...</span>
+      </div>
+    );
+  }
 
-                    <div className="mt-6 flex items-center space-x-2 overflow-x-auto pb-2">
-                        {/* Status filters */}
-                        {(['all', UserStatus.Active, UserStatus.Inactive] as const).map((status) => (
-                            <button
-                                key={status}
-                                onClick={() => setFilterStatus(status)}
-                                className={`px-4 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap ${filterStatus === status
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                    }`}
-                            >
-                                {status === 'all' ? 'Todos' : status === UserStatus.Active ? 'Ativos' : 'Inativos'}
-                            </button>
-                        ))}
+  return (
+    <div className="admin-page">
+      <header className="admin-page__header">
+        <div>
+          <h1>Gestao de usuarios</h1>
+          <p className="admin-page__subtitle">
+            Centralize perfis, acessos e status da sua equipe em um painel minimalista.
+          </p>
+        </div>
+        {currentUser?.role === UserRole.Admin && (
+          <button
+            type="button"
+            className="admin-button admin-button--primary"
+            onClick={() => setShowCreateModal(true)}
+          >
+            <UserPlus size={18} aria-hidden />
+            Novo usuario
+          </button>
+        )}
+      </header>
 
-                        {/* Role filters */}
-                        {(['all', UserRole.Admin, UserRole.User, UserRole.Viewer] as const).map((role) => (
-                            <button
-                                key={role}
-                                onClick={() => setFilterRole(role)}
-                                className={`px-4 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap ${filterRole === role
-                                    ? 'bg-purple-600 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                    }`}
-                            >
-                                {role === 'all' ? 'Todas Funções' :
-                                    role === UserRole.Admin ? 'Administradores' :
-                                        role === UserRole.User ? 'Usuários' : 'Visualizadores'}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+      <section className="admin-metrics">
+        {metrics.map((metric) => (
+          <article
+            key={metric.id}
+            className={`metric-card${metric.tone ? ` metric-card--${metric.tone}` : ''}`}
+          >
+            <span className="metric-card__label">{metric.label}</span>
+            <span className="metric-card__value">{metric.value}</span>
+          </article>
+        ))}
+      </section>
 
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead className="bg-gray-50 dark:bg-gray-800">
-                            <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-100 uppercase tracking-wider">Nome</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-100 uppercase tracking-wider">Email</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-100 uppercase tracking-wider">Função</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-100 uppercase tracking-wider">Status</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-100 uppercase tracking-wider">Data de Criação</th>
-                                <th scope="col" className="relative px-6 py-3"><span className="sr-only">Ações</span></th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                            {filteredUsers.map((user) => (
-                                <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.name}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-700 dark:text-gray-400">{user.email}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <RoleBadge role={user.role} />
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <StatusBadge status={user.status} />
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-400">
-                                        {user.createdAt instanceof Date ? user.createdAt.toLocaleDateString('pt-BR') : new Date(user.createdAt).toLocaleDateString('pt-BR')}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div className="flex items-center justify-end space-x-2">
-                                            {user?.role === UserRole.Admin && (
-                                                <>
-                                                    <button
-                                                        onClick={() => {
-                                                            setUserToAction(user);
-                                                            setShowStatusModal(true);
-                                                        }}
-                                                        className={`p-2 rounded-lg transition-colors ${user.status === UserStatus.Active
-                                                            ? 'text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20'
-                                                            : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
-                                                            }`}
-                                                        title={user.status === UserStatus.Active ? 'Desativar usuário' : 'Ativar usuário'}
-                                                    >
-                                                        {user.status === UserStatus.Active ? <Ban className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setUserToAction(user);
-                                                            setShowDeleteModal(true);
-                                                        }}
-                                                        className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                        title="Excluir usuário"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {filteredUsers.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                                        <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                                        <p className="text-lg font-medium">Nenhum usuário encontrado</p>
-                                        <p className="mt-1">Tente ajustar os filtros ou criar um novo usuário.</p>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+      <section className="admin-card">
+        <div className="admin-card__header">
+          <div>
+            <h2>Equipe cadastrada</h2>
+            <p>Visualize permissoes e status de acesso em tempo real.</p>
+          </div>
+        </div>
+
+        <div className="admin-toolbar admin-toolbar--stack">
+          <div className="admin-toolbar__search">
+            <Search className="admin-toolbar__icon" aria-hidden />
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Buscar por nome ou email"
+              className="admin-input"
+            />
+          </div>
+
+          <div className="admin-toolbar__filters">
+            <div className="admin-toolbar__filters-group">
+              <span className="admin-toolbar__label">Status</span>
+              <div className="filter-pill-group">
+                {statusOptions.map((statusKey) => {
+                  const isActive = filterStatus === statusKey;
+                  const count =
+                    statusKey === 'all'
+                      ? users.length
+                      : statusCounts[statusKey as UserStatus];
+
+                  return (
+                    <button
+                      key={statusKey}
+                      type="button"
+                      className={`filter-pill${isActive ? ' filter-pill--active' : ''}`}
+                      onClick={() => setFilterStatus(statusKey)}
+                    >
+                      <span>{statusFilterLabels[statusKey]}</span>
+                      <span className="filter-pill__count">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Create User Modal */}
-            {showCreateModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Criar Novo Usuário
-                        </h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Nome
-                                </label>
-                                <input
-                                    type="text"
-                                    value={newUser.name}
-                                    onChange={(e) => setNewUser(prev => ({ ...prev, name: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                                    placeholder="Nome completo"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    value={newUser.email}
-                                    onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                                    placeholder="email@exemplo.com"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Senha
-                                </label>
-                                <input
-                                    type="password"
-                                    value={newUser.password}
-                                    onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                                    placeholder="Senha temporária"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Função
-                                </label>
-                                <select
-                                    value={newUser.role}
-                                    onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value as UserRole }))}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                                >
-                                    <option value={UserRole.User}>Usuário</option>
-                                    <option value={UserRole.Admin}>Administrador</option>
-                                    <option value={UserRole.Viewer}>Visualizador</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className="flex justify-end space-x-3 mt-6">
-                            <button
-                                onClick={() => {
-                                    setShowCreateModal(false);
-                                    setNewUser({ email: '', name: '', role: UserRole.User, password: '' });
-                                }}
-                                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleCreateUser}
-                                disabled={createLoading}
-                                className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                            >
-                                {createLoading ? 'Criando...' : 'Criar Usuário'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <div className="admin-toolbar__filters-group">
+              <span className="admin-toolbar__label">Perfil</span>
+              <div className="filter-pill-group">
+                {roleOptions.map((roleKey) => {
+                  const isActive = filterRole === roleKey;
+                  const count =
+                    roleKey === 'all' ? users.length : roleCounts[roleKey as UserRole];
 
-            {/* Delete User Modal */}
-            {showDeleteModal && userToAction && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Confirmar Exclusão
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400 mb-6">
-                            Tem certeza que deseja excluir o usuário <strong>{userToAction.name}</strong>?
-                            Esta ação não pode ser desfeita.
-                        </p>
-                        <div className="flex justify-end space-x-3">
-                            <button
-                                onClick={() => {
-                                    setShowDeleteModal(false);
-                                    setUserToAction(null);
-                                }}
-                                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleDeleteUser}
-                                disabled={actionLoading}
-                                className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                            >
-                                {actionLoading ? 'Excluindo...' : 'Excluir'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                  return (
+                    <button
+                      key={roleKey}
+                      type="button"
+                      className={`filter-pill${isActive ? ' filter-pill--active' : ''}`}
+                      onClick={() => setFilterRole(roleKey)}
+                    >
+                      <span>{roleFilterLabels[roleKey]}</span>
+                      <span className="filter-pill__count">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
 
-            {/* Status Change Modal */}
-            {showStatusModal && userToAction && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                            Alterar Status
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400 mb-6">
-                            Deseja {userToAction.status === UserStatus.Active ? 'desativar' : 'ativar'} o usuário <strong>{userToAction.name}</strong>?
-                        </p>
-                        <div className="flex justify-end space-x-3">
-                            <button
+        <div className="admin-table-container" role="region" aria-live="polite">
+          {filteredUsers.length > 0 ? (
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th scope="col">Nome</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Perfil</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Criado em</th>
+                  <th scope="col" className="table-actions__header">
+                    Acoes
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user) => {
+                  const isActive = user.status === UserStatus.Active;
+
+                  return (
+                    <tr key={user.id}>
+                      <td>
+                        <div className="table-primary">{user.name}</div>
+                      </td>
+                      <td className="table-mono">{user.email}</td>
+                      <td>
+                        <RoleBadge role={user.role} />
+                      </td>
+                      <td>
+                        <StatusBadge status={user.status} />
+                      </td>
+                      <td className="table-date">
+                        {user.createdAt
+                          ? formatDate(user.createdAt)
+                          : 'Sem registro'}
+                      </td>
+                      <td>
+                        <div className="table-actions table-actions--wrap">
+                          {currentUser?.role === UserRole.Admin && (
+                            <>
+                              <button
+                                type="button"
+                                className={`admin-chip-button ${
+                                  isActive
+                                    ? 'admin-chip-button--warning'
+                                    : 'admin-chip-button--success'
+                                }`}
                                 onClick={() => {
-                                    setShowStatusModal(false);
-                                    setUserToAction(null);
+                                  setUserToAction(user);
+                                  setShowStatusModal(true);
                                 }}
-                                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleToggleUserStatus}
-                                disabled={actionLoading}
-                                className={`px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 ${userToAction.status === UserStatus.Active
-                                    ? 'bg-orange-600 hover:bg-orange-700'
-                                    : 'bg-green-600 hover:bg-green-700'
-                                    }`}
-                            >
-                                {actionLoading
-                                    ? (userToAction.status === UserStatus.Active ? 'Desativando...' : 'Ativando...')
-                                    : (userToAction.status === UserStatus.Active ? 'Desativar' : 'Ativar')
-                                }
-                            </button>
+                              >
+                                {isActive ? <Ban size={16} aria-hidden /> : <CheckCircle size={16} aria-hidden />}
+                                {isActive ? 'Desativar' : 'Ativar'}
+                              </button>
+                              <button
+                                type="button"
+                                className="admin-link admin-link--danger"
+                                onClick={() => {
+                                  setUserToAction(user);
+                                  setShowDeleteModal(true);
+                                }}
+                              >
+                                <Trash2 size={16} aria-hidden />
+                                Excluir
+                              </button>
+                            </>
+                          )}
                         </div>
-                    </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <div className="table-empty-state">
+              <UsersIcon size={32} aria-hidden />
+              <h3>Nenhum usuario com esse recorte</h3>
+              <p>Ajuste filtros ou crie um novo acesso para sua equipe.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {showCreateModal && (
+        <div className="admin-modal__backdrop" role="dialog" aria-modal="true">
+          <div className="admin-modal admin-modal--wide">
+            <div className="admin-modal__body">
+              <h3>Criar novo usuario</h3>
+              <p>Defina as informacoes iniciais do colaborador e o perfil de acesso.</p>
+
+              <div className="admin-modal__form">
+                <div className="admin-field admin-field--full">
+                  <label htmlFor="new-user-name">Nome completo</label>
+                  <input
+                    id="new-user-name"
+                    type="text"
+                    className="admin-input"
+                    value={newUser.name}
+                    onChange={(event) => setNewUser((prev) => ({ ...prev, name: event.target.value }))}
+                    placeholder="Ex: Ana Ribeiro"
+                  />
                 </div>
-            )}
-        </>
-    );
+                <div className="admin-field admin-field--full">
+                  <label htmlFor="new-user-email">Email</label>
+                  <input
+                    id="new-user-email"
+                    type="email"
+                    className="admin-input"
+                    value={newUser.email}
+                    onChange={(event) => setNewUser((prev) => ({ ...prev, email: event.target.value }))}
+                    placeholder="nome@empresa.com"
+                  />
+                </div>
+                <div className="admin-field">
+                  <label htmlFor="new-user-role">Perfil</label>
+                  <select
+                    id="new-user-role"
+                    className="admin-input"
+                    value={newUser.role}
+                    onChange={(event) =>
+                      setNewUser((prev) => ({ ...prev, role: event.target.value as UserRole }))
+                    }
+                  >
+                    {roleOptions
+                      .filter((role) => role !== 'all')
+                      .map((role) => (
+                        <option key={role} value={role}>
+                          {roleLabels[role as UserRole]}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <div className="admin-field">
+                  <label htmlFor="new-user-password">Senha provisoria</label>
+                  <input
+                    id="new-user-password"
+                    type="password"
+                    className="admin-input"
+                    value={newUser.password}
+                    onChange={(event) =>
+                      setNewUser((prev) => ({ ...prev, password: event.target.value }))
+                    }
+                    placeholder="Minimo 8 caracteres"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="admin-modal__actions">
+              <button
+                type="button"
+                className="admin-button admin-button--ghost"
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setNewUser({ email: '', name: '', role: UserRole.User, password: '' });
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="admin-button admin-button--primary"
+                onClick={handleCreateUser}
+                disabled={createLoading}
+              >
+                {createLoading ? 'Criando...' : 'Criar usuario'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && userToAction && (
+        <div className="admin-modal__backdrop" role="dialog" aria-modal="true">
+          <div className="admin-modal">
+            <div className="admin-modal__body">
+              <h3>Excluir usuario</h3>
+              <p>
+                Tem certeza de que deseja remover <strong>{userToAction.name}</strong>? Essa acao e
+                permanente.
+              </p>
+            </div>
+            <div className="admin-modal__actions">
+              <button
+                type="button"
+                className="admin-button admin-button--ghost"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setUserToAction(null);
+                }}
+              >
+                Manter
+              </button>
+              <button
+                type="button"
+                className="admin-button admin-button--danger"
+                onClick={handleDeleteUser}
+                disabled={actionLoading}
+              >
+                {actionLoading ? 'Excluindo...' : 'Excluir'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showStatusModal && userToAction && (
+        <div className="admin-modal__backdrop" role="dialog" aria-modal="true">
+          <div className="admin-modal">
+            <div className="admin-modal__body">
+              <h3>Atualizar status</h3>
+              <p>
+                Deseja {userToAction.status === UserStatus.Active ? 'desativar' : 'ativar'} o usuario{' '}
+                <strong>{userToAction.name}</strong>?
+              </p>
+            </div>
+            <div className="admin-modal__actions">
+              <button
+                type="button"
+                className="admin-button admin-button--ghost"
+                onClick={() => {
+                  setShowStatusModal(false);
+                  setUserToAction(null);
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className={`admin-button ${
+                  userToAction.status === UserStatus.Active
+                    ? 'admin-button--warning'
+                    : 'admin-button--success'
+                }`}
+                onClick={handleToggleUserStatus}
+                disabled={actionLoading}
+              >
+                {actionLoading
+                  ? userToAction.status === UserStatus.Active
+                    ? 'Desativando...'
+                    : 'Ativando...'
+                  : userToAction.status === UserStatus.Active
+                  ? 'Desativar'
+                  : 'Ativar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default UserManagementPage;
