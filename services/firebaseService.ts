@@ -367,10 +367,9 @@ class FirebaseService {
   async createCreditorInSienge(supplier: Supplier, cityId?: number, agentId?: number): Promise<any> {
     const siengeData = mapSupplierToSiengeCreditor(supplier, cityId, agentId);
 
-    // A chamada real à API do Sienge deve ser feita via Cloud Function
-    // por questões de segurança (API key não deve estar no client)
-    // Por enquanto, retornamos os dados mapeados
-    console.log('Dados para enviar ao Sienge:', JSON.stringify(siengeData, null, 2));
+  // A chamada real à API do Sienge deve ser feita via Cloud Function
+  // por questões de segurança (API key não deve estar no client)
+  // Por enquanto, retornamos os dados mapeados
 
     // TODO: Implementar Cloud Function para integração com Sienge
     // const response = await fetch('https://api.sienge.com.br/...', {
