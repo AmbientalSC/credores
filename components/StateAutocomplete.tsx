@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-// Static import to guarantee availability and avoid runtime 404 in dev
+import React, { useEffect, useState, useRef } from 'react';
 import citiesJson from '../cities_all.json';
 
-type City = { id: number; name: string; state?: { code?: string; name?: string } };
+type StateItem = { code?: string; name?: string };
 
 type Props = {
     value?: string;
     onChange: (value: string) => void;
-    // agora também retorna stateName e stateCode quando disponível
-    onSelect?: (name: string, id?: number, stateName?: string, stateCode?: string) => void;
+    onSelect?: (name: string, code?: string) => void;
     placeholder?: string;
     required?: boolean;
 };
@@ -19,19 +17,26 @@ const normalize = (s: string) =>
         .replace(/\p{Diacritic}/gu, '')
         .toLowerCase();
 
-const CityAutocomplete: React.FC<Props> = ({ value = '', onChange, onSelect, placeholder, required }) => {
-    const [cities, setCities] = useState<City[]>([]);
+const StateAutocomplete: React.FC<Props> = ({ value = '', onChange, onSelect, placeholder, required }) => {
+    const [states, setStates] = useState<StateItem[]>([]);
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState(value || '');
-    const [filtered, setFiltered] = useState<City[]>([]);
+    const [filtered, setFiltered] = useState<StateItem[]>([]);
     const [activeIndex, setActiveIndex] = useState(-1);
     const inputRef = useRef<HTMLInputElement | null>(null);
     const listRef = useRef<HTMLUListElement | null>(null);
 
     useEffect(() => {
-        // Use static JSON bundled with the app to avoid dev/prod 404s.
         const data = (citiesJson as any)?.results || (citiesJson as any) || [];
-        setCities(data as City[]);
+        // Extrair estados únicos
+        const map: Record<string, StateItem> = {};
+        (data as any[]).forEach((c) => {
+            const s = c.state || {};
+            const key = (s.code || s.name || '').toString();
+            if (key) map[key] = { code: s.code, name: s.name };
+        });
+        const list = Object.values(map).sort((a, b) => (a.code || a.name || '').localeCompare(b.code || b.name || ''));
+        setStates(list);
     }, []);
 
     useEffect(() => {
@@ -44,12 +49,10 @@ const CityAutocomplete: React.FC<Props> = ({ value = '', onChange, onSelect, pla
             return;
         }
         const q = normalize(query);
-        const results = cities
-            .filter((c) => normalize(c.name || '').includes(q) || normalize(c.state?.code || '').includes(q))
-            .slice(0, 12);
+        const results = states.filter((s) => normalize(s.code || s.name || '').includes(q)).slice(0, 20);
         setFiltered(results);
         setActiveIndex(-1);
-    }, [query, cities]);
+    }, [query, states]);
 
     const handleInput = (v: string) => {
         setQuery(v);
@@ -57,13 +60,12 @@ const CityAutocomplete: React.FC<Props> = ({ value = '', onChange, onSelect, pla
         setOpen(true);
     };
 
-    const handleSelect = (c: City) => {
-        const display = `${c.name}${c.state?.code ? ` - ${c.state.code}` : ''}`;
+    const handleSelect = (s: StateItem) => {
+        const display = s.code || s.name || '';
         setQuery(display);
         onChange(display);
         setOpen(false);
-        // Passar também as informações do estado (nome e código) para o callback
-        onSelect?.(c.name, c.id, c.state?.name, c.state?.code);
+        onSelect?.(display, s.code);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -113,7 +115,7 @@ const CityAutocomplete: React.FC<Props> = ({ value = '', onChange, onSelect, pla
                         inputRef.current?.focus();
                     }}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    aria-label="toggle cities"
+                    aria-label="toggle states"
                 >
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-500 dark:text-gray-300">
                         <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -123,17 +125,17 @@ const CityAutocomplete: React.FC<Props> = ({ value = '', onChange, onSelect, pla
 
             {open && filtered.length > 0 && (
                 <ul ref={listRef} className="absolute z-50 w-full max-h-60 overflow-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md mt-1 shadow-lg">
-                    {filtered.map((c, idx) => (
+                    {filtered.map((s, idx) => (
                         <li
-                            key={c.id}
+                            key={s.code || s.name}
                             onMouseDown={(ev) => {
                                 ev.preventDefault();
-                                handleSelect(c);
+                                handleSelect(s);
                             }}
                             className={`px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${idx === activeIndex ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
                         >
-                            <div className="text-sm text-gray-900 dark:text-gray-100">{c.name}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">{c.state?.code || c.state?.name || ''}</div>
+                            <div className="text-sm text-gray-900 dark:text-gray-100">{s.code || s.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{s.name && s.code ? s.name : ''}</div>
                         </li>
                     ))}
                 </ul>
@@ -142,4 +144,4 @@ const CityAutocomplete: React.FC<Props> = ({ value = '', onChange, onSelect, pla
     );
 };
 
-export default CityAutocomplete;
+export default StateAutocomplete;

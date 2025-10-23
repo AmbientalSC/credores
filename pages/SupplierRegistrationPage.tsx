@@ -21,7 +21,7 @@ const SupplierRegistrationPage: React.FC = () => {
     address: { street: '', city: '', state: '', zipCode: '' },
     submittedBy: '',
   });
-  const [cities, setCities] = useState<Array<{ id: number; name: string; state?: any }>>([]);
+  // cities are provided by CityAutocomplete via static import; we don't need to fetch here
   const [uploadedFiles, setUploadedFiles] = useState<UploadedDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -39,11 +39,7 @@ const SupplierRegistrationPage: React.FC = () => {
   }, [token]);
 
   useEffect(() => {
-    // Load cities list (expects cities_all.json to be available at app root or in public/)
-    fetch('/cities_all.json')
-      .then((r) => r.json())
-      .then((data) => setCities(data.results || data))
-      .catch(() => setCities([]));
+    // No-op: CityAutocomplete bundles cities statically. Keep effect to preserve token validation only.
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,17 +49,7 @@ const SupplierRegistrationPage: React.FC = () => {
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // If user is editing the city input, try to lookup the city id from the loaded list
-    if (name === 'city') {
-      const lookupName = value.split(' - ')[0].trim();
-      const match = cities.find(c => c.name?.toLowerCase() === lookupName.toLowerCase());
-      setFormData(prev => ({
-        ...prev,
-        address: { ...prev.address, [name]: value, cityId: match ? match.id : undefined },
-      }));
-      return;
-    }
-
+    // For city field we rely on CityAutocomplete.onSelect to set cityId.
     setFormData(prev => ({
       ...prev,
       address: { ...prev.address, [name]: value },
@@ -72,6 +58,69 @@ const SupplierRegistrationPage: React.FC = () => {
 
   const handleFilesChange = (files: UploadedDocument[]) => {
     setUploadedFiles(files);
+  };
+
+  const handleCepLookup = async (cepRaw: string) => {
+    const cep = (cepRaw || '').toString().replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        alert('CEP não encontrado.');
+        return;
+      }
+
+      const street = data.logradouro || '';
+      const neighborhood = data.bairro || '';
+      const cityName = data.localidade || '';
+      const uf = data.uf || '';
+
+      const citiesJson = (await import('../cities_all.json')) as any;
+      const list = (citiesJson.results || citiesJson) as any[];
+      const normalize = (s: string) => (s || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+      let match = list.find((c: any) => normalize(c.name) === normalize(cityName) && normalize((c.state?.code || c.state?.name || '')) === normalize(uf));
+      if (!match) {
+        match = list.find((c: any) => normalize(c.name).startsWith(normalize(cityName)) && normalize((c.state?.code || c.state?.name || '')) === normalize(uf));
+      }
+      if (!match) {
+        match = list.find((c: any) => normalize(c.name).includes(normalize(cityName)) && normalize((c.state?.code || c.state?.name || '')) === normalize(uf));
+      }
+
+      if (match) {
+        setFormData(prev => ({
+          ...prev,
+          address: {
+            ...(prev.address as any),
+            street: street || (prev.address as any).street,
+            neighborhood: neighborhood || (prev.address as any).neighborhood,
+            city: match.name,
+            cityId: match.id,
+            state: match.state?.name || uf,
+            stateCode: match.state?.code || uf,
+          } as any,
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          address: {
+            ...(prev.address as any),
+            street: street || (prev.address as any).street,
+            neighborhood: neighborhood || (prev.address as any).neighborhood,
+            // NÃO atualizar city/cityId para evitar inconsistência com cities_all.json
+            state: uf || (prev.address as any).state,
+            stateCode: uf || (prev.address as any).stateCode,
+          } as any,
+        }));
+        alert('Cidade retornada pelo CEP não encontrada em cities_all.json. Por favor selecione a cidade correta no campo Cidade.');
+      }
+    } catch (err) {
+      console.error('Erro ao buscar CEP', err);
+      alert('Erro ao buscar CEP.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -198,23 +247,23 @@ const SupplierRegistrationPage: React.FC = () => {
                 <label htmlFor="street" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Logradouro</label>
                 <input type="text" name="street" id="street" required onChange={handleAddressChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
               </div>
-              <div className="sm:col-span-2">
+              <div className="sm:col-span-3">
                 <label htmlFor="city" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Cidade</label>
                 <CityAutocomplete
                   value={formData.address.city}
                   onChange={(v: string) => setFormData(prev => ({ ...prev, address: { ...prev.address, city: v } }))}
-                  onSelect={(name: string, id?: number) => setFormData(prev => ({ ...prev, address: { ...prev.address, city: name, cityId: id } }))}
+                  onSelect={(name: string, id?: number, stateName?: string, stateCode?: string) => setFormData(prev => ({ ...prev, address: { ...prev.address, city: name, cityId: id, state: stateName || prev.address.state, stateCode: stateCode || (prev.address as any).stateCode } }))}
                   placeholder="Digite para buscar cidade..."
                   required
                 />
               </div>
-              <div className="sm:col-span-2">
-                <label htmlFor="state" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Estado</label>
-                <input type="text" name="state" id="state" required onChange={handleAddressChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+              <div className="sm:col-span-1">
+                <label htmlFor="state-display" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Estado</label>
+                <input type="text" id="state-display" readOnly value={formData.address.state || (formData.address as any).stateCode || ''} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-3" />
               </div>
               <div className="sm:col-span-2">
                 <label htmlFor="zipCode" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">CEP</label>
-                <input type="text" name="zipCode" id="zipCode" required onChange={handleAddressChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                <input type="text" name="zipCode" id="zipCode" required onChange={handleAddressChange} onBlur={(e) => handleCepLookup((e.target as HTMLInputElement).value)} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
               </div>
             </div>
           </div>

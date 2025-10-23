@@ -111,7 +111,12 @@ const SupplierDetailPage: React.FC = () => {
         try {
           const functions = getFunctions(undefined, 'southamerica-east1');
           const createSiengeCreditor = httpsCallable(functions, 'createSiengeCreditor');
-          await createSiengeCreditor({ supplierId: id });
+          // Preferir cityId cadastrado no supplier (se existir). Caso contrário, não enviar e deixar o backend usar o default.
+          const payload: any = { supplierId: id };
+          if ((supplier as any)?.address?.cityId) {
+            payload.cityId = (supplier as any).address.cityId;
+          }
+          await createSiengeCreditor(payload);
           alert('Fornecedor aprovado e enviado ao Sienge com sucesso!');
         } catch (error: any) {
           console.error('Erro ao enviar para Sienge:', error);
@@ -261,10 +266,10 @@ const SupplierDetailPage: React.FC = () => {
                   supplier.stateRegistrationType === 'C'
                     ? 'Contribuinte'
                     : supplier.stateRegistrationType === 'I'
-                    ? 'Isento'
-                    : supplier.stateRegistrationType === 'N'
-                    ? 'Não contribuinte'
-                    : supplier.stateRegistrationType
+                      ? 'Isento'
+                      : supplier.stateRegistrationType === 'N'
+                        ? 'Não contribuinte'
+                        : supplier.stateRegistrationType
                 }
               />
               <DetailItem label="Inscrição Municipal" value={supplier.municipalRegistration} />
@@ -298,8 +303,8 @@ const SupplierDetailPage: React.FC = () => {
                   supplier.bankData?.accountType === 'corrente'
                     ? 'Corrente'
                     : supplier.bankData?.accountType === 'poupanca'
-                    ? 'Poupança'
-                    : supplier.bankData?.accountType
+                      ? 'Poupança'
+                      : supplier.bankData?.accountType
                 }
               />
               <DetailItem label="Chave PIX" value={supplier.bankData?.pixKey} />
@@ -323,8 +328,8 @@ const SupplierDetailPage: React.FC = () => {
                 doc.uploadedAt instanceof Date
                   ? formatDate(doc.uploadedAt)
                   : doc.uploadedAt
-                  ? formatDate(new Date(doc.uploadedAt))
-                  : null;
+                    ? formatDate(new Date(doc.uploadedAt))
+                    : null;
 
               return (
                 <article className="document-card" role="listitem" key={`${doc.storagePath}-${index}`}>

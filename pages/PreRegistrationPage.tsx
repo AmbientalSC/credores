@@ -109,6 +109,70 @@ const PreRegistrationPage: React.FC = () => {
     setUploadedFiles(files);
   };
 
+  const handleCepLookup = async (cepRaw: string) => {
+    const cep = (cepRaw || '').toString().replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    setLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        setMessage({ type: 'error', text: 'CEP não encontrado.' });
+        return;
+      }
+
+      // Atualiza campos retornados
+      const street = data.logradouro || '';
+      const neighborhood = data.bairro || '';
+      const cityName = data.localidade || '';
+      const uf = data.uf || '';
+      // tenta resolver cityId a partir da lista de cidades já carregada usando normalização
+      const normalize = (s: string) => (s || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+      let match = (cities || []).find((c: any) => normalize(c.name) === normalize(cityName) && normalize((c.state?.code || c.state?.name || '')) === normalize(uf));
+      if (!match) {
+        // tentar correspondências mais flexíveis
+        match = (cities || []).find((c: any) => normalize(c.name).startsWith(normalize(cityName)) && normalize((c.state?.code || c.state?.name || '')) === normalize(uf));
+      }
+      if (!match) {
+        match = (cities || []).find((c: any) => normalize(c.name).includes(normalize(cityName)) && normalize((c.state?.code || c.state?.name || '')) === normalize(uf));
+      }
+
+      if (match) {
+        setFormData(prev => ({
+          ...prev,
+          address: {
+            ...prev.address,
+            street: street || prev.address.street,
+            neighborhood: neighborhood || prev.address.neighborhood,
+            city: match.name,
+            cityId: match.id,
+            state: match.state?.name || uf,
+            stateCode: match.state?.code || uf,
+          } as any,
+        }));
+      } else {
+        // se não encontrou correspondência exata, NÃO sobrescreve o campo cidade (manterá o que o usuário escolher)
+        setFormData(prev => ({
+          ...prev,
+          address: {
+            ...prev.address,
+            street: street || prev.address.street,
+            neighborhood: neighborhood || prev.address.neighborhood,
+            // NÃO atualizar city/cityId para evitar inconsistência com cities_all.json
+            state: uf || prev.address.state,
+            stateCode: uf || (prev.address as any).stateCode,
+          } as any,
+        }));
+        setMessage({ type: 'error', text: 'Cidade retornada pelo CEP não encontrada em cities_all.json. Por favor selecione a cidade correta no campo Cidade.' });
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Erro ao buscar CEP.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -284,7 +348,7 @@ const PreRegistrationPage: React.FC = () => {
               <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
                 <div className="sm:col-span-2">
                   <label htmlFor="zipCode" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">CEP *</label>
-                  <input type="text" name="zipCode" id="zipCode" required onChange={handleAddressChange} value={formData.address.zipCode} placeholder="00000-000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="zipCode" id="zipCode" required onChange={handleAddressChange} onBlur={(e) => handleCepLookup(e.target.value)} value={formData.address.zipCode} placeholder="00000-000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
                 </div>
                 <div className="sm:col-span-4">
                   <label htmlFor="street" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Logradouro *</label>
@@ -307,43 +371,14 @@ const PreRegistrationPage: React.FC = () => {
                   <CityAutocomplete
                     value={formData.address.city}
                     onChange={(v: string) => setFormData(prev => ({ ...prev, address: { ...prev.address, city: v } }))}
-                    onSelect={(name: string, id?: number) => setFormData(prev => ({ ...prev, address: { ...prev.address, city: name, cityId: id } }))}
+                    onSelect={(name: string, id?: number, stateName?: string, stateCode?: string) => setFormData(prev => ({ ...prev, address: { ...prev.address, city: name, cityId: id, state: stateName || prev.address.state, stateCode: stateCode || (prev.address as any).stateCode } }))}
                     placeholder="Digite para buscar cidade..."
                     required
                   />
                 </div>
-                <div className="sm:col-span-3">
-                  <label htmlFor="state" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Estado *</label>
-                  <select name="state" id="state" required onChange={(e) => setFormData(prev => ({ ...prev, address: { ...prev.address, state: e.target.value } }))} value={formData.address.state} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3">
-                    <option value="">Selecione...</option>
-                    <option value="AC">Acre</option>
-                    <option value="AL">Alagoas</option>
-                    <option value="AP">Amapá</option>
-                    <option value="AM">Amazonas</option>
-                    <option value="BA">Bahia</option>
-                    <option value="CE">Ceará</option>
-                    <option value="DF">Distrito Federal</option>
-                    <option value="ES">Espírito Santo</option>
-                    <option value="GO">Goiás</option>
-                    <option value="MA">Maranhão</option>
-                    <option value="MT">Mato Grosso</option>
-                    <option value="MS">Mato Grosso do Sul</option>
-                    <option value="MG">Minas Gerais</option>
-                    <option value="PA">Pará</option>
-                    <option value="PB">Paraíba</option>
-                    <option value="PR">Paraná</option>
-                    <option value="PE">Pernambuco</option>
-                    <option value="PI">Piauí</option>
-                    <option value="RJ">Rio de Janeiro</option>
-                    <option value="RN">Rio Grande do Norte</option>
-                    <option value="RS">Rio Grande do Sul</option>
-                    <option value="RO">Rondônia</option>
-                    <option value="RR">Roraima</option>
-                    <option value="SC">Santa Catarina</option>
-                    <option value="SP">São Paulo</option>
-                    <option value="SE">Sergipe</option>
-                    <option value="TO">Tocantins</option>
-                  </select>
+                <div className="sm:col-span-1">
+                  <label htmlFor="state-display" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Estado</label>
+                  <input type="text" id="state-display" readOnly value={formData.address.state || (formData.address as any).stateCode || ''} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-3" />
                 </div>
               </div>
             </div>
