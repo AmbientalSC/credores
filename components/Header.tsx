@@ -64,7 +64,7 @@ const Header: React.FC = () => {
           <span className="text-gray-700 dark:text-gray-300 hidden md:inline">{user?.email}</span>
           <button
             onClick={handleLogout}
-            className="flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/50 hover:bg-red-200 dark:hover:bg-red-900/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition"
+            className="flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/50 hover:bg-red-200 dark:hover:bg-red-900/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition admin-access"
             aria-label="Logout"
           >
             <LogOut className="h-4 w-4 mr-2" />
@@ -72,7 +72,7 @@ const Header: React.FC = () => {
           </button>
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors theme-toggle"
             aria-label="Alternar tema"
             type="button"
           >

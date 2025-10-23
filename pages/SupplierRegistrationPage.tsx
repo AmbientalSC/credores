@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import CityAutocomplete from '../components/CityAutocomplete';
 import { useParams, useNavigate } from 'react-router-dom';
 import { firebaseService } from '../services/firebaseService';
 import FileUpload from '../components/FileUpload';
@@ -20,6 +21,7 @@ const SupplierRegistrationPage: React.FC = () => {
     address: { street: '', city: '', state: '', zipCode: '' },
     submittedBy: '',
   });
+  const [cities, setCities] = useState<Array<{ id: number; name: string; state?: any }>>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -36,6 +38,14 @@ const SupplierRegistrationPage: React.FC = () => {
     validateToken();
   }, [token]);
 
+  useEffect(() => {
+    // Load cities list (expects cities_all.json to be available at app root or in public/)
+    fetch('/cities_all.json')
+      .then((r) => r.json())
+      .then((data) => setCities(data.results || data))
+      .catch(() => setCities([]));
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -43,6 +53,17 @@ const SupplierRegistrationPage: React.FC = () => {
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    // If user is editing the city input, try to lookup the city id from the loaded list
+    if (name === 'city') {
+      const lookupName = value.split(' - ')[0].trim();
+      const match = cities.find(c => c.name?.toLowerCase() === lookupName.toLowerCase());
+      setFormData(prev => ({
+        ...prev,
+        address: { ...prev.address, [name]: value, cityId: match ? match.id : undefined },
+      }));
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
       address: { ...prev.address, [name]: value },
@@ -63,12 +84,12 @@ const SupplierRegistrationPage: React.FC = () => {
 
     try {
       // Step 1: Create supplier document in Firestore to get an ID.
-      const initialSupplierData: Omit<Supplier, 'id' | 'createdAt' | 'status' | 'approvedAt'> = {
+      const initialSupplierData: any = {
         ...formData,
         rejectionReason: null,
         uploadedDocuments: [], // Start with an empty array
       };
-      const createdSupplier = await firebaseService.createSupplier(initialSupplierData);
+      const createdSupplier = await firebaseService.createSupplier(initialSupplierData as Omit<Supplier, 'id' | 'createdAt' | 'status' | 'approvedAt'>);
 
       // Step 2: Upload files to Storage using the new supplier ID.
       const uploadPromises = uploadedFiles.map(doc =>
@@ -126,11 +147,13 @@ const SupplierRegistrationPage: React.FC = () => {
       <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg">
         <div className="p-8">
           <div className="text-center mb-6">
-            <img
-              src="/credores/ambiental.svg"
-              alt="Logo Ambiental"
-              className="lucide lucide-building mx-auto h-12 w-12 text-blue-600 dark:text-indigo-400 mb-4"
-            />
+            <div className="mx-auto logo-surface">
+              <img
+                src="/credores/ambiental.svg"
+                alt="Logo Ambiental"
+                className="lucide lucide-building mx-auto h-12 w-12 text-blue-600 dark:text-indigo-400 mb-4"
+              />
+            </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Formulário de Cadastro</h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Preencha todos os campos para finalizar seu cadastro.</p>
@@ -177,7 +200,13 @@ const SupplierRegistrationPage: React.FC = () => {
               </div>
               <div className="sm:col-span-2">
                 <label htmlFor="city" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Cidade</label>
-                <input type="text" name="city" id="city" required onChange={handleAddressChange} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                <CityAutocomplete
+                  value={formData.address.city}
+                  onChange={(v: string) => setFormData(prev => ({ ...prev, address: { ...prev.address, city: v } }))}
+                  onSelect={(name: string, id?: number) => setFormData(prev => ({ ...prev, address: { ...prev.address, city: name, cityId: id } }))}
+                  placeholder="Digite para buscar cidade..."
+                  required
+                />
               </div>
               <div className="sm:col-span-2">
                 <label htmlFor="state" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Estado</label>

@@ -12,21 +12,31 @@
 :root {
   --bg: #ffffff;
   --surface: #ffffff;
-  --muted: #6b7280; /* gray-500 */
-  --text: #111827; /* gray-900 */
-  --subtle: #374151; /* gray-700 */
-  --primary: #1e40af; /* blue-800 */
-  --primary-600: #2564eb; /* blue-600 */
-  --primary-50: #eff6ff; /* blue-50 */
+  --muted: #6b7280;
+  /* gray-500 */
+  --text: #111827;
+  /* gray-900 */
+  --subtle: #374151;
+  /* gray-700 */
+  --primary: #1e40af;
+  /* blue-800 */
+  --primary-600: #2564eb;
+  /* blue-600 */
+  --primary-50: #eff6ff;
+  /* blue-50 */
   --success: #16a34a;
   --danger: #dc2626;
-  --card-shadow: 0 6px 20px rgba(16,24,40,0.08);
+  --card-shadow: 0 6px 20px rgba(16, 24, 40, 0.08);
   --radius-lg: 12px;
   /* Form controls */
-  --input-bg: #f3f4f6; /* gray-100 */
-  --input-text: #111827; /* gray-900 */
-  --input-border: #e5e7eb; /* gray-200 */
-  --input-placeholder: #9ca3af; /* gray-400 */
+  --input-bg: #f3f4f6;
+  /* gray-100 */
+  --input-text: #111827;
+  /* gray-900 */
+  --input-border: #e5e7eb;
+  /* gray-200 */
+  --input-placeholder: #9ca3af;
+  /* gray-400 */
   --button-bg: var(--primary);
   --button-text: #ffffff;
   --admin-bg: #f5f7fb;
@@ -84,7 +94,10 @@ body.dark {
 
 /* Melhorar contraste de títulos no modo claro
    Afeta: h1,h2,h3,h4 dentro do corpo da página (títulos principais como 'Cadastro de Fornecedor') */
-body.light h1, body.light h2, body.light h3, body.light h4 {
+body.light h1,
+body.light h2,
+body.light h3,
+body.light h4 {
   color: var(--text) !important;
 }
 
@@ -92,7 +105,8 @@ body.light h1, body.light h2, body.light h3, body.light h4 {
    Afeta: elementos com classe .card ou bg-white usados como painel do formulário.
    Exemplo DOM: //*[@id="root"]/div/div[2] .card
 */
-.card, body.light .bg-white {
+.card,
+body.light .bg-white {
   background-color: var(--surface) !important;
   box-shadow: var(--card-shadow) !important;
   border-radius: var(--radius-lg) !important;
@@ -104,24 +118,35 @@ body.light h1, body.light h2, body.light h3, body.light h4 {
    Afeta: elemento que contém o formulário e tudo que está dentro dele
    Exemplo DOM: //*[@id="root"]/div/div[2] (container principal do form)
 */
-body.light .content-surface, body.light .card {
-  background-color: rgba(255,255,255,0.95) !important; /* branco translúcido no modo claro */
-  color: var(--text) !important; /* cor do texto dentro do card */
+body.light .content-surface,
+body.light .card {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  /* branco translúcido no modo claro */
+  color: var(--text) !important;
+  /* cor do texto dentro do card */
 }
 
 /* Ajustes específicos para a tela 'Lista de Fornecedores' (modo claro)
    Afeta tabelas, cabeçalhos, links e textos dentro do painel principal (.card / .content-surface)
 */
-body.light .card table, body.light .content-surface table,
-.card table, .content-surface table {
+body.light .card table,
+body.light .content-surface table,
+.card table,
+.content-surface table {
   width: 100%;
   border-collapse: collapse;
 }
-body.light .card table th, body.light .card table td,
-body.light .content-surface table th, body.light .content-surface table td {
-  color: var(--text) !important; /* texto principal mais escuro */
-  border-color: rgba(0,0,0,0.06) !important; /* linhas mais visíveis */
+
+body.light .card table th,
+body.light .card table td,
+body.light .content-surface table th,
+body.light .content-surface table td {
+  color: var(--text) !important;
+  /* texto principal mais escuro */
+  border-color: rgba(0, 0, 0, 0.06) !important;
+  /* linhas mais visíveis */
 }
+
 body.light .card table th {
   font-weight: 700 !important;
   color: var(--text) !important;
@@ -132,11 +157,14 @@ body.light .card table th {
 */
 body.light .card table tbody tr:hover,
 body.light .content-surface table tbody tr:hover {
-  background-color: rgba(0,0,0,0.04) !important; /* leve sombreado */
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  /* leve sombreado */
 }
+
 body.light .card table tbody tr:hover td,
 body.light .content-surface table tbody tr:hover td {
-  color: var(--text) !important; /* garante texto legível ao passar o mouse */
+  color: var(--text) !important;
+  /* garante texto legível ao passar o mouse */
 }
 
 /* Ajustes específicos para Tabelas em painéis claros (ex: Gerenciamento de Usuários)
@@ -144,46 +172,79 @@ body.light .content-surface table tbody tr:hover td {
    e melhor contraste em modo claro. */
 body.light .bg-white table tbody tr:hover,
 body.light .bg-white table tbody tr:hover td {
-  background-color: rgba(0,0,0,0.04) !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
   color: var(--text) !important;
 }
 
 /* Garantir que os botões de ação (icones) sejam visíveis no modo claro */
-body.light .bg-white button, body.light .card button {
+body.light .bg-white button,
+body.light .card button {
   color: var(--primary) !important;
 }
-body.light .bg-white button[title="Excluir usuário"], .bg-white a.delete {
+
+body.light .bg-white button[title="Excluir usuário"],
+.bg-white a.delete {
   color: var(--danger) !important;
 }
 
 /* Links e ações (Ver Detalhes, excluir) na lista */
-.card a, .content-surface a { color: var(--primary) !important; }
-.card a.delete, .content-surface a.delete { color: var(--danger) !important; }
+.card a,
+.content-surface a {
+  color: var(--primary) !important;
+}
+
+.card a.delete,
+.content-surface a.delete {
+  color: var(--danger) !important;
+}
 
 /* Modo claro: transformar fontes azuis em preto para melhor leitura
    Afeta links e textos que vinham usando var(--primary) dentro do conteúdo */
-body.light a, body.light .card a, body.light .content-surface a {
-  color: var(--text) !important; /* preto/escuro */
+body.light a,
+body.light .card a,
+body.light .content-surface a {
+  color: var(--text) !important;
+  /* preto/escuro */
 }
+
 /* Preserve actions de exclusão (delete) em vermelho */
-body.light .card a.delete, body.light .content-surface a.delete { color: var(--danger) !important; }
+body.light .card a.delete,
+body.light .content-surface a.delete {
+  color: var(--danger) !important;
+}
 
 /* Top navigation (modo claro) — tornar os links do topo pretos */
-body.light .top-nav a, body.light .top-nav button { color: var(--text) !important; }
+body.light .top-nav a,
+body.light .top-nav button {
+  color: var(--text) !important;
+}
 
 /* Aba ativa em modo claro: usar texto escuro em vez de azul */
-body.light .tabs button.active { color: var(--text) !important; }
+body.light .tabs button.active {
+  color: var(--text) !important;
+}
 
 /* Texto secundário (subtitles) mais contrastante em light mode */
-body.light .card .muted, body.light .content-surface .muted { color: var(--muted) !important; }
+body.light .card .muted,
+body.light .content-surface .muted {
+  color: var(--muted) !important;
+}
 
 /* Garantir placeholders e inputs na lista legíveis */
-body.light .card input::placeholder, body.light .card textarea::placeholder { color: #9ca3af !important; }
+body.light .card input::placeholder,
+body.light .card textarea::placeholder {
+  color: #9ca3af !important;
+}
 
 /* Modo escuro: fundo do card e cor do texto dentro do card */
-body.dark .content-surface, body.dark .card, .dark .content-surface, .dark .card {
-  background-color: #0b1220 !important; /* fundo escuro para o painel */
-  color: #e5e7eb !important; /* texto claro dentro do painel */
+body.dark .content-surface,
+body.dark .card,
+.dark .content-surface,
+.dark .card {
+  background-color: #0b1220 !important;
+  /* fundo escuro para o painel */
+  color: #e5e7eb !important;
+  /* texto claro dentro do painel */
 }
 
 /* Os inputs/selects devem herdar a cor do container (labels e texto)
@@ -191,7 +252,9 @@ body.dark .content-surface, body.dark .card, .dark .content-surface, .dark .card
    Afeta: <input>, <select>, <textarea> dentro do .card.
    Exemplo DOM: //*[@id="root"]/div/div[2]//input
 */
-.card input, .card select, .card textarea {
+.card input,
+.card select,
+.card textarea {
   color: inherit !important;
 }
 
@@ -199,20 +262,27 @@ body.dark .content-surface, body.dark .card, .dark .content-surface, .dark .card
    Afeta: botões com classe .btn-primary ou que recebem cor de fundo via classes utilitárias
    Exemplo DOM: botão de envio no final do formulário
 */
-.btn-primary, button[class*="bg-"].btn-primary {
+.btn-primary,
+button[class*="bg-"].btn-primary {
   background-color: var(--button-bg) !important;
   color: var(--button-text) !important;
   border-radius: 8px !important;
   padding: .5rem .9rem !important;
-  box-shadow: 0 6px 16px rgba(30,64,175,0.12);
+  box-shadow: 0 6px 16px rgba(30, 64, 175, 0.12);
   transition: transform .12s ease, box-shadow .12s ease;
   border: none !important;
 }
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(30,64,175,0.14); }
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(30, 64, 175, 0.14);
+}
 
 /* Botões no modo escuro: mantém contraste */
-body.dark .btn-primary, .dark .btn-primary {
-  background-color: #2564eb !important; /* ligeiramente mais brilhante */
+body.dark .btn-primary,
+.dark .btn-primary {
+  background-color: #2564eb !important;
+  /* ligeiramente mais brilhante */
   color: #fff !important;
 }
 
@@ -223,6 +293,7 @@ body.dark .btn-primary, .dark .btn-primary {
 .tabs button {
   color: var(--subtle);
 }
+
 .tabs button.active {
   color: var(--primary) !important;
   border-color: var(--primary-600) !important;
@@ -230,18 +301,27 @@ body.dark .btn-primary, .dark .btn-primary {
 }
 
 /* Dark mode: ajustar cor das abas e da aba ativa para maior contraste */
-body.dark .tabs button, .dark .tabs button {
-  color: #94a3b8 !important; /* gray-400 - labels das abas em dark */
+body.dark .tabs button,
+.dark .tabs button {
+  color: #94a3b8 !important;
+  /* gray-400 - labels das abas em dark */
 }
-body.dark .tabs button.active, .dark .tabs button.active {
-  color: #93c5fd !important; /* azul claro para o texto da aba ativa */
-  border-color: #2564eb !important; /* azul primário mais vivo */
-  background-color: rgba(37,99,235,0.08) !important; /* leve tonalidade azul no fundo da aba ativa */
+
+body.dark .tabs button.active,
+.dark .tabs button.active {
+  color: #93c5fd !important;
+  /* azul claro para o texto da aba ativa */
+  border-color: #2564eb !important;
+  /* azul primário mais vivo */
+  background-color: rgba(37, 99, 235, 0.08) !important;
+  /* leve tonalidade azul no fundo da aba ativa */
 }
 
 /* Ajuste adicional: garantir boa legibilidade do texto dentro do card no modo escuro */
-body.dark .card, .dark .card {
-  color: #e6eef8 !important; /* tom claro para textos e labels */
+body.dark .card,
+.dark .card {
+  color: #e6eef8 !important;
+  /* tom claro para textos e labels */
 }
 
 /* Botão de acesso admin (top-right)
@@ -253,10 +333,56 @@ body.dark .card, .dark .card {
   background-color: #fff !important;
   border: 1px solid #e6eef8 !important;
 }
-.admin-access:hover { background-color: var(--primary-50) !important; }
+
+.admin-access:hover {
+  background-color: var(--primary-50) !important;
+}
+
+/* Light mode overrides for top-right controls: make them white for contrast */
+body.light .admin-access {
+  background-color: rgba(0, 0, 0, 0.55) !important;
+  /* semi-transparent dark background so white text shows */
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+body.light .admin-access:hover {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+body.light .theme-toggle {
+  background-color: rgba(0, 0, 0, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+}
+
+body.light .theme-toggle svg,
+body.light .theme-toggle svg * {
+  color: #ffffff !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+/* Light mode logo surface: small translucent white backdrop with subtle blur for legibility */
+.logo-surface {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(150, 146, 146, 0.24);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 6px 24px rgba(16, 24, 40, 0.06);
+}
+
+body.light .logo-surface {
+  background: rgba(150, 146, 146, 0.24);
+  !important;
+}
 
 /* Ensure header/top-nav buttons visible in dark mode */
-body.dark .top-nav a, body.dark .top-nav button, .dark .top-nav a, .dark .top-nav button {
+body.dark .top-nav a,
+body.dark .top-nav button,
+.dark .top-nav a,
+.dark .top-nav button {
   color: #e6eef8 !important;
 }
 
@@ -267,50 +393,85 @@ body.dark .top-nav a, body.dark .top-nav button, .dark .top-nav a, .dark .top-na
 }
 
 /* Utility tweaks */
-.text-muted { color: var(--muted) !important; }
-.text-strong { color: var(--text) !important; }
+.text-muted {
+  color: var(--muted) !important;
+}
+
+.text-strong {
+  color: var(--text) !important;
+}
 
 /* Accessibility: focus rings */
-*:focus { outline: none; }
-.focus-ring:focus { box-shadow: 0 0 0 4px rgba(37,99,235,0.12); border-color: var(--primary-600) !important; }
+*:focus {
+  outline: none;
+}
+
+.focus-ring:focus {
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  border-color: var(--primary-600) !important;
+}
 
 /* Keep legacy dark overrides working but ensure light mode clarity */
-body.light .dark\:text-gray-100 { color: var(--text) !important; }
-body.light .dark\:bg-gray-700 { background-color: #dae1ee !important; }
+body.light .dark\:text-gray-100 {
+  color: var(--text) !important;
+}
+
+body.light .dark\:bg-gray-700 {
+  background-color: #dae1ee !important;
+}
 
 /* Pequeno título do formulário */
-.form-title { font-size: 1.125rem; font-weight: 600; color: var(--text); }
+.form-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+}
 
 /* Ensure navigation links/buttons in header are visible */
-.top-nav a, .top-nav button { color: var(--primary) !important; }
+.top-nav a,
+.top-nav button {
+  color: var(--primary) !important;
+}
 
 /* Tornar os labels mais legíveis dentro do cartão / formulário
    Afeta: <label> dentro de .card / .content-surface
    Exemplo DOM: //*[@id="root"]/div/div[2]//label
 */
-.card label, .content-surface label {
-  color: var(--subtle) !important; /* padrão levemente atenuado */
+.card label,
+.content-surface label {
+  color: var(--subtle) !important;
+  /* padrão levemente atenuado */
   font-weight: 600 !important;
-  font-size: 0.875rem !important; /* tamanho legível */
+  font-size: 0.875rem !important;
+  /* tamanho legível */
 }
 
 /* Cor mais forte para labels no modo claro */
-body.light .card label, body.light .content-surface label {
-  color: #374151 !important; /* gray-700 - mais legível */
+body.light .card label,
+body.light .content-surface label {
+  color: #374151 !important;
+  /* gray-700 - mais legível */
 }
 
 /* Cor mais clara para labels no modo escuro */
-body.dark .card label, body.dark .content-surface label,
-.dark .card label, .dark .content-surface label {
-  color: #d1d5db !important; /* gray-300 */
+body.dark .card label,
+body.dark .content-surface label,
+.dark .card label,
+.dark .content-surface label {
+  color: #d1d5db !important;
+  /* gray-300 */
 }
 
 /* Make the content wrapper slightly translucent over the background image */
-.content-surface { background-color: rgb(255, 255, 255); }
+.content-surface {
+  background-color: rgb(255, 255, 255);
+}
 
 /* fallback: preserve original small overrides from earlier file */
 /* legacy selectors to avoid regressions */
-body.light .bg-gray-50 { background-color: var(--bg) !important; }
+body.light .bg-gray-50 {
+  background-color: var(--bg) !important;
+}
 
 /* Override utilitários de texto azul no modo claro
    Objetivo: elementos que usam classes como .text-blue-800/.text-blue-600
@@ -348,19 +509,31 @@ body.light [class*="text-indigo-"] {
 }
 
 /* Garantir que ícones inline e SVGs que herdam 'currentColor' também fiquem escuros no modo claro */
-body.light svg, body.light svg * { color: inherit !important; fill: currentColor !important; stroke: currentColor !important; }
+body.light svg,
+body.light svg * {
+  color: inherit !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
 
 /* Regras mais específicas para cobrir seletores existentes que ainda aplicam azul
    Forçar top-nav, botões de header, toggle de tema, .admin-access e abas para usar cor escura no modo claro.
 */
-body.light .top-nav a, body.light .top-nav button,
-body.light .admin-access, body.light .admin-access *,
-body.light .theme-toggle, body.light .theme-toggle *,
-body.light .tabs button, body.light .space-x-4 > :not([hidden]) ~ :not([hidden]),
-body.light button[class*="bg-blue-"], body.light [class*="bg-blue-"] button,
-body.light .bg-blue-100, body.light .bg-blue-50 {
+body.light .top-nav a,
+body.light .top-nav button,
+body.light .admin-access,
+body.light .admin-access *,
+body.light .theme-toggle,
+body.light .theme-toggle *,
+body.light .tabs button,
+body.light .space-x-4> :not([hidden])~ :not([hidden]),
+body.light button[class*="bg-blue-"],
+body.light [class*="bg-blue-"] button,
+body.light .bg-blue-100,
+body.light .bg-blue-50 {
   color: var(--text) !important;
-  background-color: transparent !important; /* não forçar fundo colorido aqui */
+  background-color: transparent !important;
+  /* não forçar fundo colorido aqui */
 }
 
 /* Específico para botões que combinam bg-blue-100 + text-blue-800 (por exemplo o botão 'Usuários') */
@@ -372,12 +545,19 @@ body.light .bg-blue-100 .text-blue-800 * {
 }
 
 /* Garantir que ícones e SVGs nos botões do header herdem a cor escura no modo claro */
-body.light .top-nav svg, body.light .top-nav svg * { color: var(--text) !important; fill: currentColor !important; stroke: currentColor !important; }
+body.light .top-nav svg,
+body.light .top-nav svg * {
+  color: var(--text) !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
 
 /* Restaurar aparência de botões de ação (ex: excluir) que devem permanecer coloridos */
 body.light .bg-white button[title="Excluir usuário"],
 body.light .bg-white a.delete,
-body.light .card a.delete { color: var(--danger) !important; }
+body.light .card a.delete {
+  color: var(--danger) !important;
+}
 
 /* --------------------------------------------------------------------------
    Admin area redesign
@@ -395,7 +575,7 @@ body.light .card a.delete { color: var(--danger) !important; }
   padding: clamp(1.5rem, 2vw + 1.5rem, 3rem);
 }
 
-.admin-main > .admin-page {
+.admin-main>.admin-page {
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
@@ -1411,4 +1591,79 @@ body.dark .document-card {
 body.dark .detail-reject__icon {
   background: rgba(248, 113, 113, 0.18);
   color: #f87171;
+}
+
+/* --------------------------------------------------------------------------
+   Strong overrides: ensure admin-access and theme-toggle appear white in
+   light mode. These selectors are intentionally specific and placed at the
+   end of the file to override earlier, broader rules.
+   -------------------------------------------------------------------------- */
+body.light .top-nav .admin-access,
+body.light .admin-access,
+body.light .top-nav .admin-access *,
+body.light .admin-access * {
+  color: #ffffff !important;
+  background-color: rgba(0, 0, 0, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+body.light .top-nav .theme-toggle,
+body.light .theme-toggle,
+body.light .top-nav .theme-toggle *,
+body.light .theme-toggle * {
+  color: #ffffff !important;
+  background-color: rgba(0, 0, 0, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Ensure SVG icons inside those controls are white */
+body.light .top-nav .admin-access svg,
+body.light .admin-access svg,
+body.light .top-nav .theme-toggle svg,
+body.light .theme-toggle svg,
+body.light .top-nav .admin-access svg *,
+body.light .admin-access svg *,
+body.light .top-nav .theme-toggle svg *,
+body.light .theme-toggle svg * {
+  color: #ffffff !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+/* --------------------------------------------------------------------------
+   Force same appearance in dark mode as in light mode for the two top buttons
+   Ensures .admin-access and .theme-toggle use white icons/text and the same
+   semi-transparent dark backdrop in both themes.
+   Placed after other rules to have higher specificity and avoid overrides.
+   -------------------------------------------------------------------------- */
+body.dark .top-nav .admin-access,
+body.dark .admin-access,
+body.dark .top-nav .admin-access *,
+body.dark .admin-access * {
+  color: #ffffff !important;
+  background-color: rgba(0, 0, 0, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+body.dark .top-nav .admin-access:hover,
+body.dark .admin-access:hover {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+body.dark .top-nav .theme-toggle,
+body.dark .theme-toggle,
+body.dark .top-nav .theme-toggle *,
+body.dark .theme-toggle * {
+  color: #ffffff !important;
+  background-color: rgba(0, 0, 0, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+body.dark .top-nav .theme-toggle svg,
+body.dark .theme-toggle svg,
+body.dark .top-nav .theme-toggle svg *,
+body.dark .theme-toggle svg * {
+  color: #ffffff !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
 }

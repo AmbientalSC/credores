@@ -34,3 +34,4 @@ test.json
 *.njsproj
 *.sln
 *.sw?
+.git_filter_repo_replace.txt

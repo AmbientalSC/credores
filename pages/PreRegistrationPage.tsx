@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getInitialTheme, applyTheme, toggleTheme as toggleThemeUtil } from '../src/theme';
 import { firebaseService } from '../services/firebaseService';
 import FileUpload from '../components/FileUpload';
+import CityAutocomplete from '../components/CityAutocomplete';
 import { UploadedDocument, Supplier } from '../types';
 import { Loader, CheckCircle, AlertTriangle, Send, Sun, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -39,6 +40,7 @@ const PreRegistrationPage: React.FC = () => {
     },
     submittedBy: '',
   });
+  const [cities, setCities] = useState<Array<{ id: number; name: string; state?: any }>>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -57,6 +59,13 @@ const PreRegistrationPage: React.FC = () => {
     document.documentElement.classList.add('light');
   }, []);
 
+  useEffect(() => {
+    fetch('/cities_all.json')
+      .then(r => r.json())
+      .then(data => setCities(data.results || data))
+      .catch(() => setCities([]));
+  }, []);
+
   const toggleTheme = () => {
     setDarkMode((prev) => {
       const current = prev ? 'dark' : 'light';
@@ -72,6 +81,16 @@ const PreRegistrationPage: React.FC = () => {
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    if (name === 'city') {
+      const lookupName = value.split(' - ')[0].trim();
+      const match = cities.find(c => c.name?.toLowerCase() === lookupName.toLowerCase());
+      setFormData(prev => ({
+        ...prev,
+        address: { ...prev.address, [name]: value, cityId: match ? match.id : undefined },
+      }));
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
       address: { ...prev.address, [name]: value },
@@ -146,25 +165,27 @@ const PreRegistrationPage: React.FC = () => {
     >
       <div className="absolute top-4 right-4 flex items-center gap-2">
         <Link to="/admin/login"
-          className="font-medium px-4 py-2 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-800 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-500 dark:hover:text-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
+          className="admin-access font-medium px-4 py-2 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-800 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-500 dark:hover:text-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
           Acesso Admin
         </Link>
         <button
           onClick={toggleTheme}
-          className="ml-2 p-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          className="theme-toggle ml-2 p-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           aria-label="Alternar tema"
           type="button"
         >
           {darkMode ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-gray-700" />}
         </button>
       </div>
-  <div className="max-w-4xl w-full bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 space-y-6 content-surface form-wrapper card">
+      <div className="max-w-4xl w-full bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 space-y-6 content-surface form-wrapper card">
         <div className="text-center">
-          <img
-            src="/credores/ambiental.svg"
-            alt="Logo Ambiental"
-            className="mx-auto h-40 w-auto text-blue-700 dark:text-indigo-400"
-          />
+          <div className="mx-auto logo-surface">
+            <img
+              src="/credores/ambiental.svg"
+              alt="Logo Ambiental"
+              className="mx-auto h-40 w-auto text-blue-700 dark:text-indigo-400"
+            />
+          </div>
           <h2 className="mt-4 text-2xl font-extrabold text-gray-900 dark:text-gray-100 drop-shadow-sm text-center tracking-tight">
             Cadastro de Fornecedor
           </h2>
@@ -172,8 +193,8 @@ const PreRegistrationPage: React.FC = () => {
             Preencha todos os campos para finalizar seu cadastro.
           </p>
         </div>
-  {/* Abas de navegação */}
-  <div className="flex justify-center mb-6 gap-2 flex-wrap tabs">
+        {/* Abas de navegação */}
+        <div className="flex justify-center mb-6 gap-2 flex-wrap tabs">
           <button
             type="button"
             className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'empresa' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600 active' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
@@ -283,7 +304,13 @@ const PreRegistrationPage: React.FC = () => {
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="city" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Cidade *</label>
-                  <input type="text" name="city" id="city" required onChange={handleAddressChange} value={formData.address.city} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <CityAutocomplete
+                    value={formData.address.city}
+                    onChange={(v: string) => setFormData(prev => ({ ...prev, address: { ...prev.address, city: v } }))}
+                    onSelect={(name: string, id?: number) => setFormData(prev => ({ ...prev, address: { ...prev.address, city: name, cityId: id } }))}
+                    placeholder="Digite para buscar cidade..."
+                    required
+                  />
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="state" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Estado *</label>

@@ -54,7 +54,7 @@ const AdminLoginPage: React.FC = () => {
       }}
     >
       <div className="absolute top-4 right-4 flex items-center gap-2">
-  <Link to="/" className="font-medium px-4 py-2 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-800 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-500 dark:hover:text-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
+        <Link to="/" className="font-medium px-4 py-2 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-800 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-500 dark:hover:text-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
           Cadastro de Fornecedor
         </Link>
         <button
@@ -66,13 +66,15 @@ const AdminLoginPage: React.FC = () => {
           {darkMode ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-gray-700" />}
         </button>
       </div>
-  <div className="max-w-md w-full bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 space-y-6 content-surface form-wrapper card">
+      <div className="max-w-md w-full bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 space-y-6 content-surface form-wrapper card">
         <div className="text-center">
-          <img
-            src="/credores/ambiental.svg"
-            alt="Logo Ambiental"
-            className="mx-auto h-20 w-auto mb-4"
-          />
+          <div className="mx-auto logo-surface">
+            <img
+              src="/credores/ambiental.svg"
+              alt="Logo Ambiental"
+              className="mx-auto h-20 w-auto mb-4"
+            />
+          </div>
           <h2 className="mt-4 text-2xl font-extrabold text-gray-900 dark:text-gray-100">
             Acesso Administrativo
           </h2>
