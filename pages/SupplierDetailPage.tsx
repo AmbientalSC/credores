@@ -9,6 +9,7 @@ import {
   Loader,
   X,
 } from 'lucide-react';
+import CityAutocomplete from '../components/CityAutocomplete';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 import { useAuth } from '../hooks/useAuth';
@@ -78,6 +79,8 @@ const SupplierDetailPage: React.FC = () => {
   const [isReproveModalOpen, setReproveModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState<Partial<Supplier> | null>(null);
 
   useEffect(() => {
     const fetchSupplier = async () => {
@@ -95,6 +98,13 @@ const SupplierDetailPage: React.FC = () => {
 
     fetchSupplier();
   }, [id]);
+
+  useEffect(() => {
+    if (supplier) {
+      // initialize edit data when supplier is loaded
+      setEditData({ ...supplier });
+    }
+  }, [supplier]);
 
   const handleStatusUpdate = async (status: SupplierStatus) => {
     if (!id) return;
@@ -138,6 +148,53 @@ const SupplierDetailPage: React.FC = () => {
     }
   };
 
+  const canEdit = () => {
+    if (!supplier || !user) return false;
+    // allow edit if supplier is in analysis and user is admin or the one who submitted
+    const isSubmitter = user.email && supplier.submittedBy && user.email === supplier.submittedBy;
+    return supplier.status === SupplierStatus.EmAnalise && (user.role === UserRole.Admin || isSubmitter);
+  };
+
+  const handleEditChange = (path: string, value: any) => {
+    if (!editData) return;
+    // support nested address and bankData via dot path
+    const next = { ...editData } as any;
+    if (path.includes('.')) {
+      const [root, key] = path.split('.');
+      next[root] = { ...(next[root] || {}), [key]: value };
+    } else {
+      next[path] = value;
+    }
+    setEditData(next);
+  };
+
+  const saveEdits = async () => {
+    if (!id || !editData) return;
+    setActionLoading(true);
+    try {
+      // Only send allowed fields
+      const up: Partial<Supplier> = {
+        companyName: editData.companyName,
+        tradeName: editData.tradeName,
+        cnpj: editData.cnpj,
+        phone: editData.phone,
+        email: editData.email,
+        submittedBy: editData.submittedBy,
+        address: editData.address,
+        bankData: editData.bankData,
+      };
+      await firebaseService.updateSupplier(id, up);
+      const refreshed = await firebaseService.getSupplierById(id);
+      setSupplier(refreshed || null);
+      setEditMode(false);
+    } catch (err) {
+      console.error('Erro ao salvar edição do fornecedor', err);
+      alert('Falha ao salvar alterações. Tente novamente.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="admin-page__loading">
@@ -170,7 +227,24 @@ const SupplierDetailPage: React.FC = () => {
             <ArrowLeft size={18} aria-hidden />
             Voltar
           </button>
-          <h1>{supplier.companyName}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h1 style={{ margin: 0 }}>{supplier.companyName}</h1>
+            {canEdit() && !editMode && (
+              <button type="button" className="admin-button admin-button--ghost" onClick={() => setEditMode(true)}>
+                Editar
+              </button>
+            )}
+            {editMode && (
+              <>
+                <button type="button" className="admin-button admin-button--ghost" onClick={() => { setEditMode(false); setEditData({ ...supplier }); }} disabled={actionLoading}>
+                  Cancelar
+                </button>
+                <button type="button" className="admin-button admin-button--success" onClick={saveEdits} disabled={actionLoading}>
+                  {actionLoading ? 'Salvando...' : 'Salvar'}
+                </button>
+              </>
+            )}
+          </div>
           <p className="admin-page__subtitle">
             Dados completos, histórico e documentos enviados pelo credor.
           </p>
@@ -250,7 +324,7 @@ const SupplierDetailPage: React.FC = () => {
         </div>
 
         <div className="detail-panel">
-          {activeTab === 'dados-gerais' && (
+          {activeTab === 'dados-gerais' && !editMode && (
             <div className="detail-grid" role="region" aria-label="Dados gerais do fornecedor">
               <DetailItem label="Razão Social" value={supplier.companyName} />
               <DetailItem label="Nome Fantasia" value={supplier.tradeName} />
@@ -277,15 +351,84 @@ const SupplierDetailPage: React.FC = () => {
             </div>
           )}
 
+          {activeTab === 'dados-gerais' && editMode && editData && (
+            <div className="detail-grid" role="region" aria-label="Editar dados gerais">
+              <div className="detail-grid__item">
+                <span className="detail-grid__label">Razão Social</span>
+                <input className="admin-input" value={editData.companyName || ''} onChange={(e) => handleEditChange('companyName', e.target.value)} />
+              </div>
+              <div className="detail-grid__item">
+                <span className="detail-grid__label">Nome Fantasia</span>
+                <input className="admin-input" value={editData.tradeName || ''} onChange={(e) => handleEditChange('tradeName', e.target.value)} />
+              </div>
+              <div className="detail-grid__item">
+                <span className="detail-grid__label">CNPJ/CPF</span>
+                <input className="admin-input table-mono" value={editData.cnpj || ''} onChange={(e) => handleEditChange('cnpj', e.target.value)} />
+              </div>
+              <div className="detail-grid__item">
+                <span className="detail-grid__label">Telefone</span>
+                <input className="admin-input" value={editData.phone || ''} onChange={(e) => handleEditChange('phone', e.target.value)} />
+              </div>
+              <div className="detail-grid__item">
+                <span className="detail-grid__label">E-mail</span>
+                <input className="admin-input" value={editData.email || ''} onChange={(e) => handleEditChange('email', e.target.value)} />
+              </div>
+            </div>
+          )}
+
           {activeTab === 'endereco' && (
             <div className="detail-grid" role="region" aria-label="Endereço do fornecedor">
-              <DetailItem label="CEP" value={supplier.address.zipCode} />
-              <DetailItem label="Estado" value={supplier.address.state} />
-              <DetailItem label="Cidade" value={supplier.address.city} />
-              <DetailItem label="Bairro" value={supplier.address.neighborhood} />
-              <DetailItem label="Rua/Avenida" value={supplier.address.street} />
-              <DetailItem label="Número" value={supplier.address.number} />
-              <DetailItem label="Complemento" value={supplier.address.complement} />
+              {!editMode && (
+                <>
+                  <DetailItem label="CEP" value={supplier.address.zipCode} />
+                  <DetailItem label="Estado" value={supplier.address.state} />
+                  <DetailItem label="Cidade" value={supplier.address.city} />
+                  <DetailItem label="Bairro" value={supplier.address.neighborhood} />
+                  <DetailItem label="Rua/Avenida" value={supplier.address.street} />
+                  <DetailItem label="Número" value={supplier.address.number} />
+                  <DetailItem label="Complemento" value={supplier.address.complement} />
+                </>
+              )}
+
+              {editMode && editData && (
+                <>
+                  <div className="detail-grid__item">
+                    <span className="detail-grid__label">CEP</span>
+                    <input className="admin-input" value={editData.address?.zipCode || ''} onChange={(e) => handleEditChange('address.zipCode', e.target.value)} />
+                  </div>
+                  <div className="detail-grid__item">
+                    <span className="detail-grid__label">Logradouro</span>
+                    <input className="admin-input" value={editData.address?.street || ''} onChange={(e) => handleEditChange('address.street', e.target.value)} />
+                  </div>
+                  <div className="detail-grid__item">
+                    <span className="detail-grid__label">Cidade</span>
+                    <div>
+                      <CityAutocomplete
+                        value={editData.address?.city || ''}
+                        onChange={(v: string) => handleEditChange('address.city', v)}
+                        onSelect={(name: string, id?: number, stateName?: string) => handleEditChange('address', { ...(editData.address || {}), city: name, cityId: id, state: stateName || editData.address?.state })}
+                        placeholder="Digite para buscar cidade..."
+                      />
+                    </div>
+                  </div>
+                  <div className="detail-grid__item">
+                    <span className="detail-grid__label">Estado</span>
+                    <input className="admin-input" readOnly value={editData.address?.state || ''} />
+                  </div>
+                  <div className="detail-grid__item">
+                    <span className="detail-grid__label">Bairro</span>
+                    <input className="admin-input" value={editData.address?.neighborhood || ''} onChange={(e) => handleEditChange('address.neighborhood', e.target.value)} />
+                  </div>
+                  <div className="detail-grid__item">
+                    <span className="detail-grid__label">Número</span>
+                    <input className="admin-input" value={editData.address?.number || ''} onChange={(e) => handleEditChange('address.number', e.target.value)} />
+                  </div>
+                  <div className="detail-grid__item">
+                    <span className="detail-grid__label">Complemento</span>
+                    <input className="admin-input" value={editData.address?.complement || ''} onChange={(e) => handleEditChange('address.complement', e.target.value)} />
+                  </div>
+                </>
+              )}
             </div>
           )}
 

@@ -217,7 +217,7 @@ const PreRegistrationPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center p-4 top-nav"
+      className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center pt-6 pb-6 px-2 top-nav"
       style={{
         backgroundImage: "url('/credores/meioambiental.jpeg')",
         backgroundSize: "cover",
@@ -227,7 +227,7 @@ const PreRegistrationPage: React.FC = () => {
         backgroundRepeat: "no-repeat"
       }}
     >
-      <div className="absolute top-4 right-4 flex items-center gap-2">
+      <div className="absolute top-3 right-4 flex items-center gap-2">
         <Link to="/admin/login"
           className="admin-access font-medium px-4 py-2 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-800 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-500 dark:hover:text-indigo-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
           Acesso Admin
@@ -241,74 +241,74 @@ const PreRegistrationPage: React.FC = () => {
           {darkMode ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-gray-700" />}
         </button>
       </div>
-      <div className="max-w-4xl w-full bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-8 space-y-6 content-surface form-wrapper card">
+      <div className="max-w-3xl w-full bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-4 space-y-2 content-surface form-wrapper card">
         <div className="text-center">
           <div className="mx-auto logo-surface">
             <img
               src="/credores/ambiental.svg"
               alt="Logo Ambiental"
-              className="mx-auto h-40 w-auto text-blue-700 dark:text-indigo-400"
+              className="mx-auto h-16 w-auto text-blue-700 dark:text-indigo-400"
             />
           </div>
-          <h2 className="mt-4 text-2xl font-extrabold text-gray-900 dark:text-gray-100 drop-shadow-sm text-center tracking-tight">
+          <h2 className="mt-2 text-lg font-extrabold text-gray-900 dark:text-gray-100 drop-shadow-sm text-center tracking-tight">
             Cadastro de Fornecedor
           </h2>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-0 text-sm text-gray-600 dark:text-gray-400">
             Preencha todos os campos para finalizar seu cadastro.
           </p>
         </div>
         {/* Abas de navegação */}
-        <div className="flex justify-center mb-6 gap-2 flex-wrap tabs">
+        <div className="flex justify-center mb-2 gap-2 flex-wrap tabs">
           <button
             type="button"
-            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'empresa' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600 active' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
+            className={`px-2 py-1 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'empresa' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600 active' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
             onClick={() => setActiveTab('empresa')}
           >
             Dados da Empresa
           </button>
           <button
             type="button"
-            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'endereco' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600 active' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
+            className={`px-3 py-1 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'endereco' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600 active' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
             onClick={() => setActiveTab('endereco')}
           >
             Endereço
           </button>
           <button
             type="button"
-            className={`px-4 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'bancario' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600 active' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
+            className={`px-3 py-1 rounded-t-lg font-semibold focus:outline-none transition-colors border-b-2 ${activeTab === 'bancario' ? 'border-blue-700 text-blue-800 bg-blue-50 dark:bg-gray-700 dark:text-indigo-400 dark:border-indigo-600 active' : 'border-transparent text-gray-700 dark:text-gray-300 bg-transparent'}`}
             onClick={() => setActiveTab('bancario')}
           >
             Dados Bancários
           </button>
         </div>
-        <form className="space-y-8" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
           {/* Abas: Dados da Empresa */}
           {activeTab === 'empresa' && (
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-8">
-              <h2 className="text-xl font-semibold leading-7 text-gray-900 dark:text-gray-100">Dados da Empresa</h2>
-              <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+              <h2 className="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100">Dados da Empresa</h2>
+              <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-6">
                 <div className="sm:col-span-3">
                   <label htmlFor="companyName" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Razão Social *</label>
-                  <input type="text" name="companyName" id="companyName" required onChange={handleInputChange} value={formData.companyName} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="companyName" id="companyName" required onChange={handleInputChange} value={formData.companyName} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="tradeName" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Nome Fantasia</label>
-                  <input type="text" name="tradeName" id="tradeName" onChange={handleInputChange} value={formData.tradeName} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="tradeName" id="tradeName" onChange={handleInputChange} value={formData.tradeName} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="cnpj" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">CNPJ *</label>
-                  <input type="text" name="cnpj" id="cnpj" required onChange={handleInputChange} value={formData.cnpj} placeholder="00.000.000/0000-00" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="cnpj" id="cnpj" required onChange={handleInputChange} value={formData.cnpj} placeholder="00.000.000/0000-00" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="personType" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Tipo de Pessoa *</label>
-                  <select name="personType" id="personType" required onChange={(e) => setFormData(prev => ({ ...prev, personType: e.target.value as 'F' | 'J' }))} value={formData.personType} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3">
+                  <select name="personType" id="personType" required onChange={(e) => setFormData(prev => ({ ...prev, personType: e.target.value as 'F' | 'J' }))} value={formData.personType} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2">
                     <option value="J">Jurídica</option>
                     <option value="F">Física</option>
                   </select>
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="stateRegistrationType" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Tipo de IE *</label>
-                  <select name="stateRegistrationType" id="stateRegistrationType" required onChange={(e) => setFormData(prev => ({ ...prev, stateRegistrationType: e.target.value as 'C' | 'I' | 'N' }))} value={formData.stateRegistrationType} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3">
+                  <select name="stateRegistrationType" id="stateRegistrationType" required onChange={(e) => setFormData(prev => ({ ...prev, stateRegistrationType: e.target.value as 'C' | 'I' | 'N' }))} value={formData.stateRegistrationType} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2">
                     <option value="C">Contribuinte</option>
                     <option value="I">Isento</option>
                     <option value="N">Não Contribuinte</option>
@@ -316,55 +316,55 @@ const PreRegistrationPage: React.FC = () => {
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="stateRegistration" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Inscrição Estadual {formData.stateRegistrationType === 'C' ? '*' : ''}</label>
-                  <input type="text" name="stateRegistration" id="stateRegistration" required={formData.stateRegistrationType === 'C'} onChange={handleInputChange} value={formData.stateRegistration} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="stateRegistration" id="stateRegistration" required={formData.stateRegistrationType === 'C'} onChange={handleInputChange} value={formData.stateRegistration} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="municipalRegistration" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Inscrição Municipal {formData.personType === 'J' ? '*' : ''}</label>
-                  <input type="text" name="municipalRegistration" id="municipalRegistration" required={formData.personType === 'J'} onChange={handleInputChange} value={formData.municipalRegistration} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="municipalRegistration" id="municipalRegistration" required={formData.personType === 'J'} onChange={handleInputChange} value={formData.municipalRegistration} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="phone" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Telefone *</label>
-                  <input type="text" name="phone" id="phone" required onChange={handleInputChange} value={formData.phone} placeholder="(00) 00000-0000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="phone" id="phone" required onChange={handleInputChange} value={formData.phone} placeholder="(00) 00000-0000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">E-mail Principal *</label>
-                  <input type="email" name="email" id="email" required onChange={handleInputChange} value={formData.email} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="email" name="email" id="email" required onChange={handleInputChange} value={formData.email} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="website" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Site</label>
-                  <input type="url" name="website" id="website" onChange={handleInputChange} value={formData.website} placeholder="https://www.exemplo.com" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="url" name="website" id="website" onChange={handleInputChange} value={formData.website} placeholder="https://www.exemplo.com" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="submittedBy" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">E-mail do Contato *</label>
-                  <input type="email" name="submittedBy" id="submittedBy" required onChange={handleInputChange} value={formData.submittedBy} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="email" name="submittedBy" id="submittedBy" required onChange={handleInputChange} value={formData.submittedBy} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
               </div>
             </div>
           )}
           {/* Abas: Endereço */}
           {activeTab === 'endereco' && (
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-8">
-              <h2 className="text-xl font-semibold leading-7 text-gray-900 dark:text-gray-100">Endereço</h2>
-              <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
+              <h2 className="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100">Endereço</h2>
+              <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-6">
                 <div className="sm:col-span-2">
                   <label htmlFor="zipCode" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">CEP *</label>
-                  <input type="text" name="zipCode" id="zipCode" required onChange={handleAddressChange} onBlur={(e) => handleCepLookup(e.target.value)} value={formData.address.zipCode} placeholder="00000-000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="zipCode" id="zipCode" required onChange={handleAddressChange} onBlur={(e) => handleCepLookup(e.target.value)} value={formData.address.zipCode} placeholder="00000-000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-4">
                   <label htmlFor="street" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Logradouro *</label>
-                  <input type="text" name="street" id="street" required onChange={handleAddressChange} value={formData.address.street} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="street" id="street" required onChange={handleAddressChange} value={formData.address.street} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="number" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Número *</label>
-                  <input type="text" name="number" id="number" required onChange={handleAddressChange} value={formData.address.number} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="number" id="number" required onChange={handleAddressChange} value={formData.address.number} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="complement" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Complemento</label>
-                  <input type="text" name="complement" id="complement" onChange={handleAddressChange} value={formData.address.complement} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="complement" id="complement" onChange={handleAddressChange} value={formData.address.complement} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="neighborhood" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Bairro *</label>
-                  <input type="text" name="neighborhood" id="neighborhood" required onChange={handleAddressChange} value={formData.address.neighborhood} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="neighborhood" id="neighborhood" required onChange={handleAddressChange} value={formData.address.neighborhood} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="city" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Cidade *</label>
@@ -378,35 +378,35 @@ const PreRegistrationPage: React.FC = () => {
                 </div>
                 <div className="sm:col-span-1">
                   <label htmlFor="state-display" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Estado</label>
-                  <input type="text" id="state-display" readOnly value={formData.address.state || (formData.address as any).stateCode || ''} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-3" />
+                  <input type="text" id="state-display" readOnly value={formData.address.state || (formData.address as any).stateCode || ''} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 pl-3 cursor-default" />
                 </div>
               </div>
             </div>
           )}
           {/* Abas: Dados Bancários */}
           {activeTab === 'bancario' && (
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-8">
-              <h2 className="text-xl font-semibold leading-7 text-gray-900 dark:text-gray-100">Dados Bancários</h2>
-              <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6">
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
+              <h2 className="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100">Dados Bancários</h2>
+              <div className="mt-4 grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-6">
                 <div className="sm:col-span-3">
                   <label htmlFor="bank" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Banco</label>
-                  <input type="text" name="bank" id="bank" onChange={handleBankDataChange} value={formData.bankData.bank} placeholder="Nome do Banco" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="bank" id="bank" onChange={handleBankDataChange} value={formData.bankData.bank} placeholder="Nome do Banco" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="bankCode" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Código do Banco</label>
-                  <input type="text" name="bankCode" id="bankCode" onChange={handleBankDataChange} value={formData.bankData.bankCode} placeholder="000" maxLength={3} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="bankCode" id="bankCode" onChange={handleBankDataChange} value={formData.bankData.bankCode} placeholder="000" maxLength={3} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="agency" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Agência</label>
-                  <input type="text" name="agency" id="agency" onChange={handleBankDataChange} value={formData.bankData.agency} placeholder="0000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="agency" id="agency" onChange={handleBankDataChange} value={formData.bankData.agency} placeholder="0000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-1">
                   <label htmlFor="agencyDigit" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Dígito</label>
-                  <input type="text" name="agencyDigit" id="agencyDigit" onChange={handleBankDataChange} value={formData.bankData.agencyDigit} placeholder="0" maxLength={1} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="agencyDigit" id="agencyDigit" onChange={handleBankDataChange} value={formData.bankData.agencyDigit} placeholder="0" maxLength={1} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="accountType" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Tipo de Conta</label>
-                  <select name="accountType" id="accountType" onChange={handleBankDataChange} value={formData.bankData.accountType} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3">
+                  <select name="accountType" id="accountType" onChange={handleBankDataChange} value={formData.bankData.accountType} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1">
                     <option value="">Selecione...</option>
                     <option value="corrente">Conta Corrente</option>
                     <option value="poupanca">Conta Poupança</option>
@@ -414,15 +414,15 @@ const PreRegistrationPage: React.FC = () => {
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="account" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Número da Conta</label>
-                  <input type="text" name="account" id="account" onChange={handleBankDataChange} value={formData.bankData.account} placeholder="00000000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="account" id="account" onChange={handleBankDataChange} value={formData.bankData.account} placeholder="00000000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-1">
                   <label htmlFor="accountDigit" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Dígito</label>
-                  <input type="text" name="accountDigit" id="accountDigit" onChange={handleBankDataChange} value={formData.bankData.accountDigit} placeholder="0" maxLength={2} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="accountDigit" id="accountDigit" onChange={handleBankDataChange} value={formData.bankData.accountDigit} placeholder="0" maxLength={2} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="pixKey" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Chave PIX</label>
-                  <input type="text" name="pixKey" id="pixKey" onChange={handleBankDataChange} value={formData.bankData.pixKey} placeholder="CPF/CNPJ, e-mail, telefone ou chave aleatória" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3" />
+                  <input type="text" name="pixKey" id="pixKey" onChange={handleBankDataChange} value={formData.bankData.pixKey} placeholder="CPF/CNPJ, e-mail, telefone ou chave aleatória" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
               </div>
             </div>
@@ -436,10 +436,10 @@ const PreRegistrationPage: React.FC = () => {
             </div>
           </div>
           {/* Botão de Envio */}
-          <div className="flex items-center justify-end gap-x-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <button type="submit" disabled={loading} className="inline-flex justify-center items-center px-6 py-3 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-700 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-200 dark:disabled:bg-gray-900 disabled:text-gray-500 dark:disabled:text-gray-500">
-              {loading ? <Loader className="animate-spin h-5 w-5 mr-2" /> : <Send className="h-5 w-5 mr-2" />}
-              {loading ? 'Enviando...' : 'Cadastro de Fornecedor'}
+          <div className="flex items-center justify-end gap-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button type="submit" disabled={loading} className="inline-flex justify-center items-center px-4 py-2 rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-blue-700 hover:bg-blue-50 dark:hover:bg-gray-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-200 dark:disabled:bg-gray-900 disabled:text-gray-500 dark:disabled:text-gray-500">
+              {loading ? <Loader className="animate-spin h-4 w-4 mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+              {loading ? 'Enviando...' : 'Enviar'}
             </button>
           </div>
         </form>
