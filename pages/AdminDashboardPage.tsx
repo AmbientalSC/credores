@@ -259,8 +259,8 @@ const AdminDashboardPage: React.FC = () => {
                       <div className="table-primary">{supplier.companyName}</div>
                       {supplier.tradeName && <div className="table-secondary">{supplier.tradeName}</div>}
                     </td>
-                    <td className="table-mono">{supplier.cnpj}</td>
-                    <td className="table-date">{formatDate(supplier.createdAt)}</td>
+                    <td className="table-mono whitespace-nowrap">{supplier.cnpj}</td>
+                    <td className="table-date whitespace-nowrap">{formatDate(supplier.createdAt)}</td>
                     <td>
                       <StatusBadge status={supplier.status} />
                     </td>
