@@ -113,8 +113,12 @@ const SupplierDetailPage: React.FC = () => {
     if (!id) return;
     setActionLoading(true);
     try {
-      // Para aprovação, só alterar status se a integração Sienge for bem-sucedida
+      // Para aprovação, primeiro alterar status e depois tentar integração Sienge
       if (status === SupplierStatus.Aprovado) {
+        // Primeiro aprovar o fornecedor
+        const approvedSupplier = await firebaseService.updateSupplierStatus(id, SupplierStatus.Aprovado);
+        setSupplier(approvedSupplier);
+
         try {
           const functions = getFunctions(undefined, 'southamerica-east1');
           const createSiengeCreditor = httpsCallable(functions, 'createSiengeCreditor');
@@ -124,23 +128,21 @@ const SupplierDetailPage: React.FC = () => {
             payload.cityId = (supplier as any).address.cityId;
           }
           const result = await createSiengeCreditor(payload);
-          // Se chegou aqui, integração foi bem-sucedida, então aprovar
+          // Se chegou aqui, integração foi bem-sucedida
           const returned: any = result?.data;
-          const updatedSupplier = await firebaseService.updateSupplierStatus(id, SupplierStatus.Aprovado);
           await firebaseService.updateSupplier(id, {
             siengeCreditorId: returned?.siengeCreditorId || returned?.id || null,
             siengeIntegrationError: null,
           } as any);
-          setSupplier(updatedSupplier);
           alert('Fornecedor aprovado e enviado ao Sienge com sucesso!');
         } catch (error: any) {
           console.error('Erro ao enviar para Sienge:', error);
-          // Se deu erro na integração, alterar status para "Erro" ao invés de "Aprovado"
+          // Se deu erro na integração, manter como "Aprovado" mas registrar o erro
           const message = (error?.message && String(error.message)) || JSON.stringify(error) || 'Erro desconhecido';
-          const updatedSupplier = await firebaseService.updateSupplierStatus(id, SupplierStatus.Erro);
           await firebaseService.updateSupplier(id, { siengeIntegrationError: message } as any);
-          setSupplier(updatedSupplier);
-          alert(`Erro na integração com Sienge. O fornecedor foi marcado com status "Erro": ${error.message}`);
+          const refreshed = await firebaseService.getSupplierById(id);
+          setSupplier(refreshed || null);
+          alert(`Fornecedor aprovado, mas ocorreu erro ao enviar ao Sienge: ${error.message}`);
         }
       } else {
         // Para outros status (Reprovado, Em Análise), manter lógica atual

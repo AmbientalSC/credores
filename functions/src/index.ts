@@ -93,8 +93,17 @@ function mapSupplierToSiengeCreditor(
         siengeRequest.address.complement = supplier.address.complement;
     }
 
-    // Adicionar inscrição estadual apenas se preenchida
-    if (supplier.stateRegistration) {
+    // Validar inscrição estadual obrigatória para Contribuinte e Não Contribuinte
+    if ((supplier.stateRegistrationType === 'C' || supplier.stateRegistrationType === 'N') && !supplier.stateRegistration) {
+        const typeName = supplier.stateRegistrationType === 'C' ? 'Contribuinte' : 'Não Contribuinte';
+        throw new Error(`Inscrição estadual é obrigatória para ${typeName}`);
+    }
+
+    // Adicionar inscrição estadual - para Contribuinte e Não Contribuinte
+    if ((supplier.stateRegistrationType === 'C' || supplier.stateRegistrationType === 'N') && supplier.stateRegistration) {
+        siengeRequest.stateRegistrationNumber = supplier.stateRegistration;
+    } else if (supplier.stateRegistration) {
+        // Fallback para casos onde não há stateRegistrationType definido
         siengeRequest.stateRegistrationNumber = supplier.stateRegistration;
     }
 

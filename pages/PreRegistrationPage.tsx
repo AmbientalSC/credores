@@ -322,13 +322,20 @@ const PreRegistrationPage: React.FC = () => {
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="stateRegistrationType" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Tipo de IE *</label>
-                  <select name="stateRegistrationType" id="stateRegistrationType" required onChange={(e) => setFormData(prev => ({ ...prev, stateRegistrationType: e.target.value as 'C' | 'I' | 'N' }))} value={formData.stateRegistrationType} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2">
+                  <select name="stateRegistrationType" id="stateRegistrationType" required onChange={(e) => {
+                    const newType = e.target.value as 'C' | 'I' | 'N';
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      stateRegistrationType: newType,
+                      stateRegistration: newType === 'I' ? '' : prev.stateRegistration
+                    }));
+                  }} value={formData.stateRegistrationType} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2">
                     <option value="C">Contribuinte</option>
                     <option value="I">Isento</option>
                     <option value="N">Não Contribuinte</option>
                   </select>
                 </div>
-                {formData.stateRegistrationType === 'C' && (
+                {(formData.stateRegistrationType === 'C' || formData.stateRegistrationType === 'N') && (
                 <div className="sm:col-span-2">
                   <label htmlFor="stateRegistration" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Inscrição Estadual *</label>
                   <input type="text" name="stateRegistration" id="stateRegistration" required onChange={handleInputChange} value={formData.stateRegistration} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />

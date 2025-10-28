@@ -55,7 +55,7 @@ const mapSupplierToSiengeCreditor = (supplier: Supplier, cityId: number = 1, age
     personType: supplier.personType,
     typesId: ['FO'], // FO = Fornecedor (pode ser customizado)
     registerNumber: supplier.cnpj.replace(/\D/g, ''),
-    stateRegistrationNumber: supplier.stateRegistration,
+    stateRegistrationNumber: supplier.stateRegistrationType === 'C' ? supplier.stateRegistration : undefined,
     stateRegistrationType: supplier.stateRegistrationType,
     paymentTypeId: 1, // Default, pode ser customizado
     phone: phoneDdd && phoneNumber ? {
