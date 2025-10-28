@@ -69,13 +69,23 @@ function mapSupplierToSiengeCreditor(
             phoneNumber: phoneNumber,
             email: supplier.email,
         }],
-        address: {
-            cityId: supplier.address.cityId || cityId,
-            streetName: supplier.address.street,
-            number: supplier.address.number,
-            neighborhood: supplier.address.neighborhood,
-            zipCode: supplier.address.zipCode.replace(/\D/g, ""),
-        },
+        address: (() => {
+            const a: any = {
+                cityId: supplier.address.cityId || cityId,
+                streetName: supplier.address.street,
+                number: supplier.address.number,
+                neighborhood: supplier.address.neighborhood,
+            };
+            // zipCode is optional — only add if present and a string
+            if (supplier.address.zipCode) {
+                try {
+                    a.zipCode = String(supplier.address.zipCode).replace(/\D/g, "");
+                } catch (e) {
+                    // If sanitization fails, do not include zipCode in payload
+                }
+            }
+            return a;
+        })(),
     };
 
     // Adicionar complemento apenas se preenchido

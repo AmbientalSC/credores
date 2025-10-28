@@ -4,6 +4,7 @@ import { firebaseService } from '../services/firebaseService';
 import FileUpload from '../components/FileUpload';
 import CityAutocomplete from '../components/CityAutocomplete';
 import { UploadedDocument, Supplier } from '../types';
+import citiesJson from '../cities_all.json';
 import { Loader, CheckCircle, AlertTriangle, Send, Sun, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -60,10 +61,12 @@ const PreRegistrationPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetch('/cities_all.json')
-      .then(r => r.json())
-      .then(data => setCities(data.results || data))
-      .catch(() => setCities([]));
+    // Use the bundled cities JSON to avoid relying on the dev server public path
+    try {
+      setCities((citiesJson as any).results || (citiesJson as any));
+    } catch (e) {
+      setCities([]);
+    }
   }, []);
 
   const toggleTheme = () => {
@@ -76,7 +79,18 @@ const PreRegistrationPage: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [name]: value };
+
+      // Auto-preenchimento entre Razão Social e Nome Fantasia
+      if (name === 'companyName' && !newData.tradeName) {
+        newData.tradeName = value;
+      } else if (name === 'tradeName' && !newData.companyName) {
+        newData.companyName = value;
+      }
+
+      return newData;
+    });
   };
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -296,8 +310,8 @@ const PreRegistrationPage: React.FC = () => {
                   <input type="text" name="tradeName" id="tradeName" onChange={handleInputChange} value={formData.tradeName} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-2">
-                  <label htmlFor="cnpj" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">CNPJ *</label>
-                  <input type="text" name="cnpj" id="cnpj" required onChange={handleInputChange} value={formData.cnpj} placeholder="00.000.000/0000-00" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
+                  <label htmlFor="cnpj" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">{formData.personType === 'F' ? 'CPF' : 'CNPJ'} *</label>
+                  <input type="text" name="cnpj" id="cnpj" required onChange={handleInputChange} value={formData.cnpj} placeholder={formData.personType === 'F' ? '000.000.000-00' : '00.000.000/0000-00'} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="personType" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Tipo de Pessoa *</label>
@@ -314,29 +328,31 @@ const PreRegistrationPage: React.FC = () => {
                     <option value="N">Não Contribuinte</option>
                   </select>
                 </div>
+                {formData.stateRegistrationType === 'C' && (
                 <div className="sm:col-span-2">
-                  <label htmlFor="stateRegistration" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Inscrição Estadual {formData.stateRegistrationType === 'C' ? '*' : ''}</label>
-                  <input type="text" name="stateRegistration" id="stateRegistration" required={formData.stateRegistrationType === 'C'} onChange={handleInputChange} value={formData.stateRegistration} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
+                  <label htmlFor="stateRegistration" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Inscrição Estadual *</label>
+                  <input type="text" name="stateRegistration" id="stateRegistration" required onChange={handleInputChange} value={formData.stateRegistration} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
+                )}
                 <div className="sm:col-span-2">
-                  <label htmlFor="municipalRegistration" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Inscrição Municipal {formData.personType === 'J' ? '*' : ''}</label>
-                  <input type="text" name="municipalRegistration" id="municipalRegistration" required={formData.personType === 'J'} onChange={handleInputChange} value={formData.municipalRegistration} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
+                  <label htmlFor="municipalRegistration" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Inscrição Municipal</label>
+                  <input type="text" name="municipalRegistration" id="municipalRegistration" onChange={handleInputChange} value={formData.municipalRegistration} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="phone" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Telefone *</label>
                   <input type="text" name="phone" id="phone" required onChange={handleInputChange} value={formData.phone} placeholder="(00) 00000-0000" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-3">
-                  <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">E-mail Principal *</label>
-                  <input type="email" name="email" id="email" required onChange={handleInputChange} value={formData.email} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
+                  <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">E-mail Principal</label>
+                  <input type="email" name="email" id="email" onChange={handleInputChange} value={formData.email} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-3">
                   <label htmlFor="website" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Site</label>
                   <input type="url" name="website" id="website" onChange={handleInputChange} value={formData.website} placeholder="https://www.exemplo.com" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
                 <div className="sm:col-span-3">
-                  <label htmlFor="submittedBy" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">E-mail do Contato *</label>
-                  <input type="email" name="submittedBy" id="submittedBy" required onChange={handleInputChange} value={formData.submittedBy} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
+                  <label htmlFor="submittedBy" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">E-mail do Contato</label>
+                  <input type="email" name="submittedBy" id="submittedBy" onChange={handleInputChange} value={formData.submittedBy} className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-1" />
                 </div>
               </div>
             </div>

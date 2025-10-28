@@ -3,7 +3,8 @@ export enum SupplierStatus {
   Pendente = 'pendente',
   EmAnalise = 'em_analise',
   Aprovado = 'aprovado',
-  Reprovado = 'reprovado'
+  Reprovado = 'reprovado',
+  Erro = 'erro'
 }
 
 export interface UploadedDocument {
@@ -61,6 +62,9 @@ export interface Supplier {
   submittedBy: string;
   rejectionReason: string | null;
   uploadedDocuments: UploadedDocument[];
+  // Sienge integration fields
+  siengeIntegrationError?: string | null;
+  siengeCreditorId?: string | null;
 }
 
 // Interfaces para integração com Sienge

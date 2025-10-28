@@ -11,6 +11,7 @@ const statusLabels: Record<SupplierStatus, string> = {
   [SupplierStatus.Reprovado]: 'Reprovado',
   [SupplierStatus.EmAnalise]: 'Em análise',
   [SupplierStatus.Pendente]: 'Pendente',
+  [SupplierStatus.Erro]: 'Erro na Integração'
 };
 
 const StatusBadge: React.FC<{ status: SupplierStatus }> = ({ status }) => {
@@ -76,6 +77,7 @@ const AdminDashboardPage: React.FC = () => {
       [SupplierStatus.Reprovado]: 0,
       [SupplierStatus.EmAnalise]: 0,
       [SupplierStatus.Pendente]: 0,
+      [SupplierStatus.Erro]: 0,
     };
 
     suppliers.forEach((supplier) => {
@@ -114,6 +116,12 @@ const AdminDashboardPage: React.FC = () => {
         id: 'rejected',
         label: 'Reprovados',
         value: statusCounts[SupplierStatus.Reprovado],
+        tone: 'danger' as const,
+      },
+      {
+        id: 'error',
+        label: 'Erro na Integração',
+        value: statusCounts[SupplierStatus.Erro],
         tone: 'danger' as const,
       },
     ],

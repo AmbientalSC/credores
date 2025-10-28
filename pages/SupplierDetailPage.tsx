@@ -15,12 +15,14 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useAuth } from '../hooks/useAuth';
 import { firebaseService } from '../services/firebaseService';
 import { Supplier, SupplierStatus, UserRole } from '../types';
+import FileUpload from '../components/FileUpload';
 
 const statusLabels: Record<SupplierStatus, string> = {
   [SupplierStatus.Aprovado]: 'Aprovado',
   [SupplierStatus.Reprovado]: 'Reprovado',
   [SupplierStatus.EmAnalise]: 'Em análise',
   [SupplierStatus.Pendente]: 'Pendente',
+  [SupplierStatus.Erro]: 'Erro na Integração'
 };
 
 const StatusBadge: React.FC<{ status: SupplierStatus }> = ({ status }) => {
@@ -81,6 +83,7 @@ const SupplierDetailPage: React.FC = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState<Partial<Supplier> | null>(null);
+  const [newFiles, setNewFiles] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchSupplier = async () => {
@@ -110,13 +113,7 @@ const SupplierDetailPage: React.FC = () => {
     if (!id) return;
     setActionLoading(true);
     try {
-      const updatedSupplier = await firebaseService.updateSupplierStatus(
-        id,
-        status,
-        status === SupplierStatus.Reprovado ? rejectionReason : undefined,
-      );
-      setSupplier(updatedSupplier);
-
+      // Para aprovação, só alterar status se a integração Sienge for bem-sucedida
       if (status === SupplierStatus.Aprovado) {
         try {
           const functions = getFunctions(undefined, 'southamerica-east1');
@@ -126,12 +123,33 @@ const SupplierDetailPage: React.FC = () => {
           if ((supplier as any)?.address?.cityId) {
             payload.cityId = (supplier as any).address.cityId;
           }
-          await createSiengeCreditor(payload);
+          const result = await createSiengeCreditor(payload);
+          // Se chegou aqui, integração foi bem-sucedida, então aprovar
+          const returned: any = result?.data;
+          const updatedSupplier = await firebaseService.updateSupplierStatus(id, SupplierStatus.Aprovado);
+          await firebaseService.updateSupplier(id, {
+            siengeCreditorId: returned?.siengeCreditorId || returned?.id || null,
+            siengeIntegrationError: null,
+          } as any);
+          setSupplier(updatedSupplier);
           alert('Fornecedor aprovado e enviado ao Sienge com sucesso!');
         } catch (error: any) {
           console.error('Erro ao enviar para Sienge:', error);
-          alert(`Fornecedor aprovado, mas ocorreu erro ao enviar ao Sienge: ${error.message}`);
+          // Se deu erro na integração, alterar status para "Erro" ao invés de "Aprovado"
+          const message = (error?.message && String(error.message)) || JSON.stringify(error) || 'Erro desconhecido';
+          const updatedSupplier = await firebaseService.updateSupplierStatus(id, SupplierStatus.Erro);
+          await firebaseService.updateSupplier(id, { siengeIntegrationError: message } as any);
+          setSupplier(updatedSupplier);
+          alert(`Erro na integração com Sienge. O fornecedor foi marcado com status "Erro": ${error.message}`);
         }
+      } else {
+        // Para outros status (Reprovado, Em Análise), manter lógica atual
+        const updatedSupplier = await firebaseService.updateSupplierStatus(
+          id,
+          status,
+          status === SupplierStatus.Reprovado ? rejectionReason : undefined,
+        );
+        setSupplier(updatedSupplier);
       }
 
       setReproveModalOpen(false);
@@ -148,11 +166,48 @@ const SupplierDetailPage: React.FC = () => {
     }
   };
 
+  const handleResendIntegration = async () => {
+    if (!id || !supplier) return;
+    setActionLoading(true);
+    try {
+      const functions = getFunctions(undefined, 'southamerica-east1');
+      const createSiengeCreditor = httpsCallable(functions, 'createSiengeCreditor');
+      const payload: any = { supplierId: id };
+      if ((supplier as any)?.address?.cityId) payload.cityId = (supplier as any).address.cityId;
+      const result = await createSiengeCreditor(payload);
+      // store returned id if present and clear any previous error
+      const returned: any = result?.data;
+      await firebaseService.updateSupplier(id, {
+        siengeCreditorId: returned?.siengeCreditorId || returned?.id || null,
+        siengeIntegrationError: null,
+      } as any);
+      const refreshed = await firebaseService.getSupplierById(id);
+      setSupplier(refreshed || null);
+      alert('Integração com Sienge executada com sucesso.');
+    } catch (error: any) {
+      console.error('Erro na integração com Sienge:', error);
+      const message = (error?.message && String(error.message)) || JSON.stringify(error) || 'Erro desconhecido';
+      try {
+        await firebaseService.updateSupplier(id, { siengeIntegrationError: message } as any);
+      } catch (e) {
+        console.warn('Falha ao registrar erro no Firestore', e);
+      }
+      const refreshed = await firebaseService.getSupplierById(id);
+      setSupplier(refreshed || null);
+      alert('Falha na integração com Sienge. O erro foi registrado no credor.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const canEdit = () => {
     if (!supplier || !user) return false;
-    // allow edit if supplier is in analysis and user is admin or the one who submitted
+    // allow edit if supplier is in analysis OR approved and user is admin or the one who submitted
+    // Assumption: both admins and the original submitter can edit approved suppliers. If you
+    // want only admins to edit approved suppliers, tell me and I'll tighten this.
     const isSubmitter = user.email && supplier.submittedBy && user.email === supplier.submittedBy;
-    return supplier.status === SupplierStatus.EmAnalise && (user.role === UserRole.Admin || isSubmitter);
+    return (supplier.status === SupplierStatus.EmAnalise || supplier.status === SupplierStatus.Aprovado) &&
+      (user.role === UserRole.Admin || isSubmitter);
   };
 
   const handleEditChange = (path: string, value: any) => {
@@ -172,7 +227,17 @@ const SupplierDetailPage: React.FC = () => {
     if (!id || !editData) return;
     setActionLoading(true);
     try {
-      // Only send allowed fields
+      // If supplier is approved and no cityId is present, warn but do not block saving.
+      if (supplier?.status === SupplierStatus.Aprovado) {
+        const cityId = (editData.address as any)?.cityId;
+        if (!cityId) {
+          // Do not block — allow editing email/phone/attachments even without cityId.
+          // Show a non-blocking warning to the user.
+          // eslint-disable-next-line no-console
+          console.warn('Credor aprovado sem cityId; ao reenviar para integração pode ocorrer falha.');
+        }
+      }
+      // Only send allowed fields (including any removals of uploadedDocuments)
       const up: Partial<Supplier> = {
         companyName: editData.companyName,
         tradeName: editData.tradeName,
@@ -183,7 +248,31 @@ const SupplierDetailPage: React.FC = () => {
         address: editData.address,
         bankData: editData.bankData,
       };
-      await firebaseService.updateSupplier(id, up);
+
+      // If the edit removed or reordered uploadedDocuments, include that
+      if (editData.uploadedDocuments) {
+        up.uploadedDocuments = editData.uploadedDocuments as any;
+      }
+
+      // Update basic fields first
+      await firebaseService.updateSupplier(id, up as any);
+
+      // If there are new files to upload, upload them and append
+      if (newFiles && newFiles.length > 0) {
+        try {
+          const uploadPromises = newFiles.map((f: any) => firebaseService.uploadFile(f.file, id));
+          const uploadedMeta = await Promise.all(uploadPromises);
+          // Append uploaded metadata to supplier
+          const refreshedAfterUpload = await firebaseService.getSupplierById(id);
+          const existing = (refreshedAfterUpload?.uploadedDocuments) || [];
+          const merged = [...existing, ...uploadedMeta];
+          await firebaseService.updateSupplier(id, { uploadedDocuments: merged } as any);
+        } catch (uerr) {
+          console.error('Erro ao enviar arquivos:', uerr);
+          alert('Erro ao enviar arquivos anexos. As alterações principais foram salvas, mas alguns arquivos não foram enviados.');
+        }
+      }
+
       const refreshed = await firebaseService.getSupplierById(id);
       setSupplier(refreshed || null);
       setEditMode(false);
@@ -230,7 +319,7 @@ const SupplierDetailPage: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <h1 style={{ margin: 0 }}>{supplier.companyName}</h1>
             {canEdit() && !editMode && (
-              <button type="button" className="admin-button admin-button--ghost" onClick={() => setEditMode(true)}>
+              <button type="button" className="admin-button admin-button--ghost" onClick={() => { setEditMode(true); setEditData({ ...supplier }); setNewFiles([]); }}>
                 Editar
               </button>
             )}
@@ -297,6 +386,16 @@ const SupplierDetailPage: React.FC = () => {
               <span className="detail-summary__label">Motivo da reprovação</span>
               <span className="detail-summary__value detail-summary__value--danger">
                 {supplier.rejectionReason}
+              </span>
+            </div>
+          )}
+          {supplier.siengeIntegrationError && (
+            <div className="detail-summary__item detail-summary__item--full">
+              <span className="detail-summary__label">Erro integração Sienge</span>
+              <span className="detail-summary__value detail-summary__value--danger">
+                {typeof supplier.siengeIntegrationError === 'string'
+                  ? supplier.siengeIntegrationError
+                  : JSON.stringify(supplier.siengeIntegrationError)}
               </span>
             </div>
           )}
@@ -465,46 +564,96 @@ const SupplierDetailPage: React.FC = () => {
         </header>
 
         <div className="detail-documents" role="list">
-          {supplier.uploadedDocuments && supplier.uploadedDocuments.length > 0 ? (
-            supplier.uploadedDocuments.map((doc, index) => {
-              const uploadedAt =
-                doc.uploadedAt instanceof Date
-                  ? formatDate(doc.uploadedAt)
-                  : doc.uploadedAt
-                    ? formatDate(new Date(doc.uploadedAt))
-                    : null;
+          {editMode && editData ? (
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium">Documentos Atuais</h4>
+              {(editData.uploadedDocuments && (editData.uploadedDocuments as any[]).length > 0) ? (
+                (editData.uploadedDocuments as any[]).map((doc: any, index: number) => {
+                  const uploadedAt = doc.uploadedAt instanceof Date ? formatDate(doc.uploadedAt) : doc.uploadedAt ? formatDate(new Date(doc.uploadedAt)) : null;
+                  return (
+                    <article className="document-card" role="listitem" key={`${doc.storagePath || doc.docName}-${index}`}>
+                      <div className="document-card__icon">
+                        <FileText size={20} aria-hidden />
+                      </div>
+                      <div className="document-card__meta">
+                        <span className="document-card__title">{doc.docName}</span>
+                        {uploadedAt && <span className="document-card__timestamp">Enviado em {uploadedAt}</span>}
+                      </div>
+                      <div className="document-card__actions">
+                        {doc.url && (
+                          <a href={doc.url} target="_blank" rel="noopener noreferrer" className="admin-link mr-2">
+                            <Eye size={16} aria-hidden />
+                            Abrir
+                          </a>
+                        )}
+                        <button type="button" className="admin-button admin-button--ghost" onClick={() => {
+                          // remove from editData.uploadedDocuments
+                          const next = { ...(editData || {}) } as any;
+                          next.uploadedDocuments = (next.uploadedDocuments || []).filter((d: any) => d.storagePath !== doc.storagePath || d.docName !== doc.docName);
+                          setEditData(next);
+                        }}>
+                          Remover
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })
+              ) : (
+                <div className="table-empty-state">
+                  <FileText size={32} aria-hidden />
+                  <h3>Sem arquivos anexados</h3>
+                  <p>Nenhum documento foi enviado para este cadastro.</p>
+                </div>
+              )}
 
-              return (
-                <article className="document-card" role="listitem" key={`${doc.storagePath}-${index}`}>
-                  <div className="document-card__icon">
-                    <FileText size={20} aria-hidden />
-                  </div>
-                  <div className="document-card__meta">
-                    <span className="document-card__title">{doc.docName}</span>
-                    {uploadedAt && (
-                      <span className="document-card__timestamp">Enviado em {uploadedAt}</span>
-                    )}
-                  </div>
-                  {doc.url && (
-                    <a
-                      href={doc.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="admin-link"
-                    >
-                      <Eye size={16} aria-hidden />
-                      Abrir
-                    </a>
-                  )}
-                </article>
-              );
-            })
-          ) : (
-            <div className="table-empty-state">
-              <FileText size={32} aria-hidden />
-              <h3>Sem arquivos anexados</h3>
-              <p>Nenhum documento foi enviado para este cadastro.</p>
+              <div>
+                <h4 className="text-sm font-medium">Adicionar anexos</h4>
+                <FileUpload onFilesChange={(files) => setNewFiles(files)} />
+              </div>
             </div>
+          ) : (
+            // read-only view
+            (supplier.uploadedDocuments && supplier.uploadedDocuments.length > 0) ? (
+              supplier.uploadedDocuments.map((doc, index) => {
+                const uploadedAt =
+                  doc.uploadedAt instanceof Date
+                    ? formatDate(doc.uploadedAt)
+                    : doc.uploadedAt
+                      ? formatDate(new Date(doc.uploadedAt))
+                      : null;
+
+                return (
+                  <article className="document-card" role="listitem" key={`${doc.storagePath}-${index}`}>
+                    <div className="document-card__icon">
+                      <FileText size={20} aria-hidden />
+                    </div>
+                    <div className="document-card__meta">
+                      <span className="document-card__title">{doc.docName}</span>
+                      {uploadedAt && (
+                        <span className="document-card__timestamp">Enviado em {uploadedAt}</span>
+                      )}
+                    </div>
+                    {doc.url && (
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="admin-link"
+                      >
+                        <Eye size={16} aria-hidden />
+                        Abrir
+                      </a>
+                    )}
+                  </article>
+                );
+              })
+            ) : (
+              <div className="table-empty-state">
+                <FileText size={32} aria-hidden />
+                <h3>Sem arquivos anexados</h3>
+                <p>Nenhum documento foi enviado para este cadastro.</p>
+              </div>
+            )
           )}
         </div>
       </section>
@@ -537,6 +686,25 @@ const SupplierDetailPage: React.FC = () => {
                 <Check size={18} aria-hidden />
               )}
               Aprovar
+            </button>
+          </div>
+        </section>
+      )}
+
+      {user?.role === UserRole.Admin && supplier.status === SupplierStatus.Aprovado && (
+        <section className="admin-card detail-actions">
+          <div className="detail-actions__content">
+            <h2>Integração</h2>
+            <p>Reenviar dados ao Sienge caso necessário.</p>
+          </div>
+          <div className="detail-actions__buttons">
+            <button
+              type="button"
+              className="admin-button admin-button--secondary"
+              onClick={handleResendIntegration}
+              disabled={actionLoading}
+            >
+              {actionLoading ? 'Processando...' : 'Reenviar para integração'}
             </button>
           </div>
         </section>
